@@ -10,7 +10,7 @@ from scipy.interpolate import interp1d
 
 from diusst_funcs import make_mesh
 
-def cfl_interpolation(data, dz0, ngrid, a=0,b=1,k_eddy_max=2e-4,k_mol=1e-7, maxwind=10, z_f=10, save=False, verbose=True):
+def cfl_interpolation(data, dz0, ngrid, a=0,b=1,k_eddy_max=2e-4,k_mol=1e-7, maxwind=10, z_f=10, save=None, verbose=True):
     z = make_mesh(dz0,ngrid)[0]
     dz = z[1:]-z[:-1]
 
@@ -50,9 +50,9 @@ def cfl_interpolation(data, dz0, ngrid, a=0,b=1,k_eddy_max=2e-4,k_mol=1e-7, maxw
     final = np.row_stack((times_concat,series_concat)).transpose()
     df_final = pd.DataFrame(final[1:,:], columns=['times','sst','sst_err','ftemp','wind','atemp','swrad','humid'])
 
-    if save:
-        df_final.to_csv(datetime.now().isoformat(timespec='seconds')+'smartinterpol_data.csv')
-        
+    if save is not None:
+        df_final.to_csv(save+'_data.csv')
+
     if verbose:
         print('+++ Variable time-step interpolation +++')
         print('Interpolated dataset has '+str(len(df_final))+' time steps with average length '+str(round(np.mean(dt_list),3))+' s.')

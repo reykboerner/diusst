@@ -31,8 +31,8 @@ timestamp = now.strftime("%y%m%d-%H%M%S")
 # RUN SETTINGS (check before each run)
 
 # Output storage
+run_id = 'M-I2-1-test'
 output_path = '../output/'
-run_id = 'M-I2-1'
 
 # Fit parameters
 param_names = ['kappa', 'mu', 'attenu']
@@ -45,9 +45,9 @@ param_max = np.array([7e-4, 1, 10])
 param_start = np.array([2e-4, 1e-4, 2.5])
 
 # Sampling
-nwalkers = 16
-nsteps = 700
-burninsteps = 50
+nwalkers = 8
+nsteps = 5
+burninsteps = 2
 
 # DIUSST model
 scheme = 'euler'
@@ -61,7 +61,8 @@ maxwind = 10
 # Dataset
 data_path = '../data/bayesian_training/'
 data_filename = 'training_minnett_ssterr03-10_humid10.csv'
-data_interval = [786,1377]
+#data_interval = [786,1377]
+data_interval = [786,800]
 
 # Other settings
 parallel = True
@@ -79,7 +80,8 @@ data_orig = pd.read_csv(data_path+data_filename)[data_interval[0]:data_interval[
 
 # interpolate to meet CFL condition
 data = cfl_interpolation(data_orig, dz0=dz0, ngrid=ngrid,
-        a=0, b=1, k_eddy_max=param_max[0], maxwind=maxwind)[0]
+        a=0, b=1, k_eddy_max=param_max[0], maxwind=maxwind,
+        save=output_path+timestamp+'_'+run_id)[0]
 
 # extract data
 ftemp = np.mean(data['ftemp'].to_numpy(np.float64))
@@ -109,7 +111,8 @@ def log_prob(x):
         return -np.inf
     else:
         mse = bayesian_likelihood(x)
-        return - (mse + np.log( np.prod(param_max-param_min) ))
+        #return - (mse + np.log( np.prod(param_max-param_min) ))
+        return -mse
 
 # initialize emcee
 ndim = len(param_names)
@@ -121,7 +124,7 @@ for i in range(nwalkers):
 os.environ["OMP_NUM_THREADS"] = "1"
 ncpu = cpu_count()
 
-print('Ndim = {0} parameters, burn-in = {1} steps, followed by sampling {2} steps.'.format(ndim, burninsteps, nsteps))
+print('Ndim = {0} parameters, burn-in = {1} steps, followed by sample = {2} steps.'.format(ndim, burninsteps, nsteps))
 print("{} walkers on {} CPUs.".format(nwalkers, ncpu))
 
 # run MCMC sampler
@@ -129,6 +132,7 @@ if parallel:
     with Pool() as pool:
         sampler = emcee.EnsembleSampler(nwalkers, ndim, log_prob, pool=pool)
         burnin = sampler.run_mcmc(initial, burninsteps, progress=True)
+        print('Burn-in complete ({} steps).'.format(burninsteps))
         sampler.reset()
         mcrun = sampler.run_mcmc(burnin, nsteps, progress=True)
 
@@ -138,20 +142,18 @@ else:
     sampler.reset()
     mcrun = sampler.run_mcmc(burnin, nsteps, progress=True)
 
-print('Sampling complete.')
+print('Sampling complete ({} steps).'.format(nsteps))
 
 # Get sampling results
 samples = sampler.get_chain()
-autocorrtime = sampler.get_autocorr_time()
+autocorrtime = sampler.get_autocorr_time(quiet=True)
 probs = sampler.get_log_prob()
 
-samples_df = pd.DataFrame(samples)
-autocorrtime_df = pd.DataFrame(autocorrtime)
-probs_df = pd.DataFrame(probs)
+for i in range(ndim):
+	np.savetxt(output_path+timestamp+'_'+run_id+'_samples_'+param_names[i]+'.txt', samples[:,:,i])
 
-samples_df.to_csv(data_path+timestamp+'_'+run_id+'_samples.csv')
-autocorrtime_df.to_csv(data_path+timestamp+'_'+run_id+'_autocorrtime.csv')
-probs_df.to_csv(data_path+timestamp+run_id+'_'+'_probs.csv')
+np.savetxt(output_path+timestamp+'_'+run_id+'_autocorrtime.txt', autocorrtime)
+np.savetxt(output_path+timestamp+'_'+run_id+'_probs.txt', probs)
 
 print('Sample storage complete.')
 print('=================================== Success!')
