@@ -31,7 +31,7 @@ timestamp = now.strftime("%y%m%d-%H%M%S")
 # RUN SETTINGS (check before each run)
 
 # Output storage
-run_id = 'M-I2-1-test'
+run_id = 'M-I2-A1'
 output_path = '../output/'
 
 # Fit parameters
@@ -45,9 +45,9 @@ param_max = np.array([7e-4, 1, 10])
 param_start = np.array([2e-4, 1e-4, 2.5])
 
 # Sampling
-nwalkers = 8
-nsteps = 5
-burninsteps = 2
+nwalkers = 16
+nsteps = 5000
+burninsteps = 50
 
 # DIUSST model
 scheme = 'euler'
@@ -61,8 +61,7 @@ maxwind = 10
 # Dataset
 data_path = '../data/bayesian_training/'
 data_filename = 'training_minnett_ssterr03-10_humid10.csv'
-#data_interval = [786,1377]
-data_interval = [786,800]
+data_interval = [786,1377]
 
 # Other settings
 parallel = True
