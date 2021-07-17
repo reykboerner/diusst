@@ -38,8 +38,8 @@ output_path = '../output/'
 param_names = ['kappa', 'mu', 'attenu']
 
 # Parameter limits
-param_min = np.array([0, 0, 0])
-param_max = np.array([7e-4, 1, 10])
+param_min = np.array([0, 0, 1e-3])
+param_max = np.array([7e-4, 0.1, 10])
 
 # Initial walker positions
 param_start = np.array([2e-4, 1e-4, 2.5])
