@@ -46,7 +46,7 @@ param_start = np.array([2e-4, 1e-4, 2.5])
 
 # Sampling
 nwalkers = 16
-nsteps = 2500
+nsteps = 50#2500
 
 # DIUSST model
 scheme = 'euler'
@@ -60,7 +60,7 @@ maxwind = 10
 # Dataset
 data_path = '../data/bayesian_training/'
 data_filename = 'training_minnett_ssterr03-10_humid10.csv'
-data_interval = [786,1377]
+data_interval = [786,800]#1377]
 
 # Other settings
 parallel = True
@@ -123,7 +123,7 @@ for i in range(nwalkers):
 os.environ["OMP_NUM_THREADS"] = "1"
 ncpu = cpu_count()
 
-print('Ndim = {0} parameters, burn-in = {1} steps, followed by sample = {2} steps.'.format(ndim, burninsteps, nsteps))
+print('Ndim = {0} parameters, sample = {1} steps.'.format(ndim, nsteps))
 print("{} walkers on {} CPUs.".format(nwalkers, ncpu))
 
 # Backend
