@@ -46,8 +46,7 @@ param_start = np.array([2e-4, 1e-4, 2.5])
 
 # Sampling
 nwalkers = 16
-nsteps = 5000
-burninsteps = 50
+nsteps = 2500
 
 # DIUSST model
 scheme = 'euler'
@@ -65,6 +64,7 @@ data_interval = [786,1377]
 
 # Other settings
 parallel = True
+use_backend = True
 
 ###########################################################
 # (End of run settings)
@@ -126,20 +126,20 @@ ncpu = cpu_count()
 print('Ndim = {0} parameters, burn-in = {1} steps, followed by sample = {2} steps.'.format(ndim, burninsteps, nsteps))
 print("{} walkers on {} CPUs.".format(nwalkers, ncpu))
 
+# Backend
+backend_filename = timestamp+'_'+run_id+'.h5'
+backend = emcee.backends.HDFBackend(backend_filename)
+backend.reset(nwalkers, ndim)
+
 # run MCMC sampler
 if parallel:
     with Pool() as pool:
-        sampler = emcee.EnsembleSampler(nwalkers, ndim, log_prob, pool=pool)
-        burnin = sampler.run_mcmc(initial, burninsteps, progress=True)
-        print('Burn-in complete ({} steps).'.format(burninsteps))
-        sampler.reset()
-        mcrun = sampler.run_mcmc(burnin, nsteps, progress=True)
+        sampler = emcee.EnsembleSampler(nwalkers, ndim, log_prob, pool=pool, backend=backend)
+        mcrun = sampler.run_mcmc(initial, nsteps, progress=True)
 
 else:
     sampler = emcee.EnsembleSampler(nwalkers, ndim, log_prob)
-    burnin = sampler.run_mcmc(initial, burninsteps, progress=True)
-    sampler.reset()
-    mcrun = sampler.run_mcmc(burnin, nsteps, progress=True)
+    mcrun = sampler.run_mcmc(initial, nsteps, progress=True)
 
 print('Sampling complete ({} steps).'.format(nsteps))
 
