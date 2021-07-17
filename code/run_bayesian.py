@@ -46,7 +46,7 @@ param_start = np.array([2e-4, 1e-4, 2.5])
 
 # Sampling
 nwalkers = 16
-nsteps = 50#2500
+nsteps = 2500
 
 # DIUSST model
 scheme = 'euler'
@@ -60,7 +60,7 @@ maxwind = 10
 # Dataset
 data_path = '../data/bayesian_training/'
 data_filename = 'training_minnett_ssterr03-10_humid10.csv'
-data_interval = [786,800]#1377]
+data_interval = [786,1377]
 
 # Other settings
 parallel = True
