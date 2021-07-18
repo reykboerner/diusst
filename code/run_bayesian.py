@@ -31,7 +31,7 @@ timestamp = now.strftime("%y%m%d-%H%M%S")
 # RUN SETTINGS (check before each run)
 
 # Output storage
-run_id = 'M-I2-A1'
+run_id = 'M-I2-A2'
 output_path = '../output/'
 
 # Fit parameters
