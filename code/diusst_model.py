@@ -20,6 +20,7 @@ from diusst_funcs import make_mesh, snell, s_sat, laplace_central, grad_central,
 def diusst_bayesian(
     times,                          # array of time points (in s)
     Ta_data,                        # air temperature data array
+    Tf_data,			    # foundation temperature data
     sw_data,                        # incoming shortwave radiation data array
     u_data=None,                    # (optional) wind speed data array (in m/s)
     sa_data=None,                   # (optional) air specific humidity data array (in kg/kg)
@@ -69,10 +70,10 @@ def diusst_bayesian(
     T = np.zeros((N_t, N_z))
 
     # initial condition
-    T[0] = np.ones(N_z)*T_f
+    T[0] = np.ones(N_z)*Tf_data[0]
 
     # boundary condition
-    T[:,-1] = np.ones(N_t)*T_f
+    T[:,-1] = Tf_data
 
     # Eddy diffusivity
     kappa = np.zeros((N_t,N_z))
