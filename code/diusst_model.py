@@ -114,8 +114,10 @@ def diusst_bayesian(
         # Euler integration
         T[n] = T[n-1] + dt[n-1] * (
                 kappa[n-1]*laplace_central(T[n-1],dv1,dv2) - k_eddy/z_f *(min(u[n-1],maxwind))**2*grad_central(T[n-1],dv1)
-                - mix*(T[n-1]-T_f)
+                - mix*(T[n-1]-T[n-1,-1])
                 + grad_backward(Q,dv1)/(rho_w*c_p)
                 )
+
+        T[n,-1] = Tf_data[n]
 
     return [T[:,1:], z[1:], times]
