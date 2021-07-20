@@ -31,7 +31,7 @@ timestamp = now.strftime("%y%m%d-%H%M%S")
 # RUN SETTINGS (check before each run)
 
 # Output storage
-run_id = 'M-I2-A1'
+run_id = 'M-I4-B1'
 output_path = '../output/'
 
 # Fit parameters
@@ -46,7 +46,7 @@ param_start = np.array([2e-4, 1e-4, 2.5])
 
 # Sampling
 nwalkers = 16
-nsteps = 2500
+nsteps = 500
 
 # DIUSST model
 scheme = 'euler'
@@ -60,7 +60,7 @@ maxwind = 10
 # Dataset
 data_path = '../data/bayesian_training/'
 data_filename = 'training_minnett_ssterr03-10_humid10.csv'
-data_interval = [786,1377]
+data_interval = [1175,1377]
 
 # Other settings
 parallel = True
@@ -85,7 +85,7 @@ data = cfl_interpolation(data_orig, dz0=dz0, ngrid=ngrid,
 # extract data
 ftemp = np.mean(data['ftemp'].to_numpy(np.float64))
 sst_data = data['sst'].to_numpy(np.float64) - data['ftemp'].to_numpy(np.float64)
-sst_err = data['sst_err'].to_numpy(np.float64)
+sst_err = data['sst_err'].to_numpy(np.float64) * 0.25
 times = data['times'].to_numpy(np.float64)
 wind = data['wind'].to_numpy(np.float64)
 atemp = data['atemp'].to_numpy(np.float64)
@@ -110,8 +110,8 @@ def log_prob(x):
         return -np.inf
     else:
         mse = bayesian_likelihood(x)
-        #return - (mse + np.log( np.prod(param_max-param_min) ))
-        return -mse
+        return - (mse + np.log( np.prod(param_max-param_min) ))
+        #return -mse
 
 # initialize emcee
 ndim = len(param_names)
