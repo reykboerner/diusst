@@ -1,7 +1,6 @@
 """
 Diurnal SST model for Bayesian analysis
 Code boiled down to necessities in order to minimize computiation time
-
 cloud = 0
 wind_dep = quadratic
 diffu_type = 'linear'
@@ -20,7 +19,6 @@ from diusst_funcs import make_mesh, snell, s_sat, laplace_central, grad_central,
 def diusst_bayesian(
     times,                          # array of time points (in s)
     Ta_data,                        # air temperature data array
-    Tf_data,			    # foundation temperature data
     sw_data,                        # incoming shortwave radiation data array
     u_data=None,                    # (optional) wind speed data array (in m/s)
     sa_data=None,                   # (optional) air specific humidity data array (in kg/kg)
@@ -70,10 +68,10 @@ def diusst_bayesian(
     T = np.zeros((N_t, N_z))
 
     # initial condition
-    T[0] = np.ones(N_z)*Tf_data[0]
+    T[0] = np.ones(N_z)*T_f
 
     # boundary condition
-    T[:,-1] = Tf_data
+    T[:,-1] = np.ones(N_t)*T_f
 
     # Eddy diffusivity
     kappa = np.zeros((N_t,N_z))
@@ -83,7 +81,7 @@ def diusst_bayesian(
 
     # mixing coefficient
     mix = np.zeros(N_z)
-    mix[1:-1] = mu * np.abs(z[2:]-z[1:-1]) #/ np.abs(z[1:-1]-z[-1])
+    mix[1:-1] = mu * np.abs(z[2:]-z[1:-1]) / np.abs(z[1:-1]-z[-1])
 
     # initialize heat fluxes
     Qs, Ql, Rlw = [], [], []
@@ -114,10 +112,8 @@ def diusst_bayesian(
         # Euler integration
         T[n] = T[n-1] + dt[n-1] * (
                 kappa[n-1]*laplace_central(T[n-1],dv1,dv2) - k_eddy/z_f *(min(u[n-1],maxwind))**2*grad_central(T[n-1],dv1)
-                - mix*(T[n-1]-T[n-1,-1])
+                - mix*(T[n-1]-T_f)
                 + grad_backward(Q,dv1)/(rho_w*c_p)
                 )
-
-        T[n,-1] = Tf_data[n]
 
     return [T[:,1:], z[1:], times]

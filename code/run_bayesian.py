@@ -31,7 +31,7 @@ timestamp = now.strftime("%y%m%d-%H%M%S")
 # RUN SETTINGS (check before each run)
 
 # Output storage
-run_id = 'M-I2-B1'
+run_id = 'M-I4-B1'
 output_path = '../output/'
 
 # Fit parameters
@@ -45,7 +45,7 @@ param_max = np.array([7e-4, 0.1, 10])
 param_start = np.array([2e-4, 1e-4, 2.5])
 
 # Sampling
-nwalkers = 8
+nwalkers = 16
 nsteps = 500
 
 # DIUSST model
@@ -60,7 +60,7 @@ maxwind = 10
 # Dataset
 data_path = '../data/bayesian_training/'
 data_filename = 'training_minnett_ssterr03-10_humid10.csv'
-data_interval = [786,1377]
+data_interval = [1175,1377]
 
 # Other settings
 parallel = True
@@ -83,8 +83,8 @@ data = cfl_interpolation(data_orig, dz0=dz0, ngrid=ngrid,
         save=output_path+timestamp+'_'+run_id)[0]
 
 # extract data
-ftemp = data['ftemp'].to_numpy(np.float64)
-sst_data = data['sst'].to_numpy(np.float64) - ftemp
+ftemp = np.mean(data['ftemp'].to_numpy(np.float64))
+sst_data = data['sst'].to_numpy(np.float64) - data['ftemp'].to_numpy(np.float64)
 sst_err = data['sst_err'].to_numpy(np.float64) * 0.25
 times = data['times'].to_numpy(np.float64)
 wind = data['wind'].to_numpy(np.float64)
@@ -96,7 +96,7 @@ humid = data['humid'].to_numpy(np.float64)
 def bayesian_likelihood(params):
     kappa, mu, attenu = params
     simu = diusst(
-            times, atemp, ftemp, swrad, u_data=wind, sa_data=humid,
+            times, atemp, swrad, u_data=wind, sa_data=humid, T_f=ftemp,
             k_eddy=kappa, mu=mu, attenu=attenu,
             opac=opac, k_mol=k_mol,
             dz=dz0, ngrid=ngrid)
