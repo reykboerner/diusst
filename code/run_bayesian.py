@@ -31,7 +31,7 @@ timestamp = now.strftime("%y%m%d-%H%M%S")
 # RUN SETTINGS (check before each run)
 
 # Output storage
-run_id = 'M-I4-B1'
+run_id = 'M-I5-B1'
 output_path = '../output/'
 
 # Fit parameters
@@ -42,11 +42,11 @@ param_min = np.array([0, 0, 1e-3])
 param_max = np.array([7e-4, 0.1, 10])
 
 # Initial walker positions
-param_start = np.array([2e-4, 1e-4, 2.5])
+param_start = np.array([1e-4, 1e-4, 2.5])
 
 # Sampling
 nwalkers = 16
-nsteps = 500
+nsteps = 5000
 
 # DIUSST model
 scheme = 'euler'
@@ -60,7 +60,7 @@ maxwind = 10
 # Dataset
 data_path = '../data/bayesian_training/'
 data_filename = 'training_minnett_ssterr03-10_humid10.csv'
-data_interval = [1175,1377]
+data_interval = [1149,1471]
 
 # Other settings
 parallel = True
@@ -110,7 +110,7 @@ def log_prob(x):
         return -np.inf
     else:
         mse = bayesian_likelihood(x)
-        return - (mse + np.log( np.prod(param_max-param_min) ))
+        return - (mse/0.01 + np.log( np.prod(param_max-param_min) ))
         #return -mse
 
 # initialize emcee
