@@ -87,7 +87,7 @@ def cfl_interpolation5(data, dz0, ngrid, k_mol=1e-7, k_eddy_max=2e-4, k_0_max=1,
         # get wind speed
         u = min(maxwind,max(wind[i],wind[i-1]))
         # calculate courant for time step 1s at each depth
-        c_array = 2*(k_mol+k_eddy_max*( 1-k_0_max*np.exp(z[1:]/lambd_min) )*u**2 / dz**2
+        c_array = 2*(k_mol+k_eddy_max*( 1-k_0_max*np.exp(z[1:]/lambd_min)) )*u**2 / dz**2
         # get maximum CFL
         c = np.amax(c_array)
         # set time step

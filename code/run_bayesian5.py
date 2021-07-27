@@ -81,7 +81,7 @@ data_orig = pd.read_csv(data_path+data_filename)[data_interval[0]:data_interval[
 # interpolate to meet CFL condition
 data = cfl_interpolation5(data_orig, dz0=dz0, ngrid=ngrid,
         k_mol = k_mol,
-        k_eddy_max=param_max[0], k_0_max=param_max[3], lambd_min=param_min[-1]
+        k_eddy_max=param_max[0], k_0_max=param_max[3], lambd_min=param_min[-1],
         maxwind=maxwind, z_f=z_f,
         save=output_path+timestamp+'_'+run_id)[0]
 
