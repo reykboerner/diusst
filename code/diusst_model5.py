@@ -81,8 +81,8 @@ def diusst_bayesian(
 
     for i in range(N_z):
         #kappa[:,i] = (k_mol - k_eddy * z[i]/z_f *(np.minimum(u,np.ones(N_t)*maxwind))**2)
-        kappa[:,i] = k_mol + k_eddy * (1- k_0*np.exp(z[i]/lambd)) * (np.minimum(u,np.ones(N_t)*maxwind))**2
-        dkappadz[:,i] = - k_eddy*k_0/lambd * np.exp(z[i]/lambd) * (np.minimum(u,np.ones(N_t)*maxwind))**2
+        kappa[:,i] = k_mol + k_eddy * (1-k0*np.exp(z[i]/lambd))/(1-k0*np.exp(-z_f/lambd)) * (np.minimum(maxwind, u))**2
+        dkappadz[:,i] = - k_eddy*k0/lambd * np.exp(z[i]/lambd) /(1-k0*np.exp(-z_f/lambd)) * (np.minimum(maxwind, u))**2
 
     # mixing coefficient
     mix = np.zeros(N_z)
