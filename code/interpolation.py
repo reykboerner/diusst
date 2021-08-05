@@ -28,6 +28,7 @@ def cfl_interpolation(data, dz0, ngrid, a=0,b=1,k_eddy_max=2e-4,k_mol=1e-7, maxw
     times_concat = np.zeros(1)
     series_concat = np.zeros((7,1))
     dt_list = []
+    idx_list = [0]
 
     for i in range(1,len(times)):
         # get wind speed
@@ -46,6 +47,7 @@ def cfl_interpolation(data, dz0, ngrid, a=0,b=1,k_eddy_max=2e-4,k_mol=1e-7, maxw
         times_concat = np.concatenate((times_concat,times_new))
         series_concat = np.column_stack((series_concat,series_new))
         dt_list.append(dt)
+        idx_list.append(len(times_concat)-1)
 
     final = np.row_stack((times_concat,series_concat)).transpose()
     df_final = pd.DataFrame(final[1:,:], columns=['times','sst','sst_err','ftemp','wind','atemp','swrad','humid'])
@@ -60,7 +62,7 @@ def cfl_interpolation(data, dz0, ngrid, a=0,b=1,k_eddy_max=2e-4,k_mol=1e-7, maxw
         print('Computation time will be reduced by '+str(round((1-len(df_final)/int((times[-1]-times[0])/np.amin(dt_list)/0.95))*100,3))+' %')
         print('++++++++++++++++++++++++++++++++++++++++')
 
-    return df_final, dt_list
+    return df_final, dt_list, idx_list[:-1]
 
 #############################################################################################################
 
@@ -82,6 +84,7 @@ def cfl_interpolation5(data, dz0, ngrid, k_mol=1e-7, k_eddy_max=2e-4, k_0_max=1,
     times_concat = np.zeros(1)
     series_concat = np.zeros((7,1))
     dt_list = []
+    idx_list = [0]
 
     for i in range(1,len(times)):
         # get wind speed
@@ -100,6 +103,7 @@ def cfl_interpolation5(data, dz0, ngrid, k_mol=1e-7, k_eddy_max=2e-4, k_0_max=1,
         times_concat = np.concatenate((times_concat,times_new))
         series_concat = np.column_stack((series_concat,series_new))
         dt_list.append(dt)
+        idx_list.append(len(times_concat)-1)
 
     final = np.row_stack((times_concat,series_concat)).transpose()
     df_final = pd.DataFrame(final[1:,:], columns=['times','sst','sst_err','ftemp','wind','atemp','swrad','humid'])
@@ -114,7 +118,7 @@ def cfl_interpolation5(data, dz0, ngrid, k_mol=1e-7, k_eddy_max=2e-4, k_0_max=1,
         print('Computation time will be reduced by '+str(round((1-len(df_final)/int((times[-1]-times[0])/np.amin(dt_list)/0.95))*100,3))+' %')
         print('++++++++++++++++++++++++++++++++++++++++')
 
-    return df_final, dt_list
+    return df_final, dt_list, idx_list[:-1]
 
 
 
