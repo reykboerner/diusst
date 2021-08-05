@@ -79,32 +79,36 @@ print('Data loaded from '+data_path+data_filename)
 data_orig = pd.read_csv(data_path+data_filename)[data_interval[0]:data_interval[1]]
 
 # interpolate to meet CFL condition
-data = cfl_interpolation5(data_orig, dz0=dz0, ngrid=ngrid,
+data, dtlist, idxlist = cfl_interpolation5(data_orig, dz0=dz0, ngrid=ngrid,
         k_mol = k_mol,
         k_eddy_max=param_max[0], k_0_max=param_max[3], lambd_min=param_min[-1],
         maxwind=maxwind, z_f=z_f,
-        save=output_path+timestamp+'_'+run_id)[0]
+        save=output_path+timestamp+'_'+run_id)
 
 # extract data
-ftemp = np.mean(data['ftemp'].to_numpy(np.float64))
-sst_data = data['sst'].to_numpy(np.float64) - data['ftemp'].to_numpy(np.float64)
-sst_err = data['sst_err'].to_numpy(np.float64) * 0.01
+ftemp = np.mean(data_orig['ftemp'].to_numpy(np.float64))
+
 times = data['times'].to_numpy(np.float64)
 wind = data['wind'].to_numpy(np.float64)
-atemp = data['atemp'].to_numpy(np.float64)
 swrad = data['swrad'].to_numpy(np.float64)
 humid = data['humid'].to_numpy(np.float64)
+atemp_rel = data['atemp'].to_numpy(np.float64) - data['ftemp'].to_numpy(np.float64) + ftemp
+
+times_orig = data_orig['times'].to_numpy(np.float64)
+sst_data = data_orig['sst'].to_numpy(np.float64) - data_orig['ftemp'].to_numpy(np.float64) + ftemp
+sst_err = data_orig['sst_err'].to_numpy(np.float64)
+
 
 # Define likelihood function
 def bayesian_likelihood(params):
     kappa, mu, attenu, kappa0, lambd = params
     simu = diusst(
-            times, atemp, swrad, u_data=wind, sa_data=humid, T_f=ftemp,
+            times, atemp_rel, swrad, u_data=wind, sa_data=humid, T_f=ftemp,
             k_eddy=kappa, mu=mu, attenu=attenu, k_0=kappa0, lambd=lambd,
             opac=opac, k_mol=k_mol,
             dz=dz0, ngrid=ngrid)
-    sst_model = simu[0][:,0] - ftemp
-    mse = np.mean(((sst_data-sst_model)/sst_err)**2)
+    sst_model = simu[0][:,0]
+    mse = np.sum(((sst_model[idx_list] - sst_data[:-1])/sst_err)**2)
     return mse
 
 # Define posterior distribution function
@@ -114,7 +118,6 @@ def log_prob(x):
     else:
         mse = bayesian_likelihood(x)
         return - (mse + np.log( np.prod(param_max-param_min) ))
-        #return -mse
 
 # initialize emcee
 ndim = len(param_names)
