@@ -1,5 +1,5 @@
 """
-run_bayesian5.py
+run_bayesian5_2ds.py
 Python script to run Bayesian analysis for DIUSST model
 """
 
@@ -20,6 +20,7 @@ from multiprocessing import cpu_count
 
 # Load custom functions
 from interpolation import cfl_interpolation5
+from diusst_funcs import make_mesh
 from diusst_model5 import diusst_bayesian as diusst
 
 # Time stamp
@@ -31,7 +32,7 @@ timestamp = now.strftime("%y%m%d-%H%M%S")
 # RUN SETTINGS (check before each run)
 
 # Output storage
-run_id = 'M-I6-B1-final'
+run_id = 'M-I6-A1-final'
 output_path = '../output/'
 
 # Fit parameters
@@ -57,11 +58,13 @@ diffu = 1
 opac = 1
 k_mol = 1e-7
 maxwind = 10
+ref_level = 21
 
 # Dataset
 data_path = '../data/bayesian_training/'
-data_filename = 'training_minnett_ssterr03-10_humid10.csv'
-data_interval = [1149,1471]
+data_filename = 'training_minnett_err-boatspd-radio_humid10.csv'
+data_interval1 = [96,413]
+data_interval2 = [1290,1585]
 
 # Other settings
 parallel = True
@@ -74,43 +77,68 @@ use_backend = True
 print('==== Bayesian sampling 5 parameters, Run ID '+run_id+' ====')
 print('Start time: '+str(timestamp))
 print('Data loaded from '+data_path+data_filename)
+print('Optimization with respect to reference depth = '+round(make_mesh(0.1,40,z_f=10)[0][ref_level],3))
 
 # Load dataset
-data_orig = pd.read_csv(data_path+data_filename)[data_interval[0]:data_interval[1]]
+data_orig1 = pd.read_csv(data_path+data_filename)[data_interval1[0]:data_interval1[1]]
+data_orig2 = pd.read_csv(data_path+data_filename)[data_interval2[0]:data_interval2[1]]
 
 # interpolate to meet CFL condition
-data, dtlist, idxlist = cfl_interpolation5(data_orig, dz0=dz0, ngrid=ngrid,
+data1, dtlist1, idx1 = cfl_interpolation5(data_orig1, dz0=dz0, ngrid=ngrid,
         k_mol = k_mol,
-        k_eddy_max=param_max[0], k_0_max=param_max[3], lambd_min=param_min[-1],
+        k_eddy_max=param_max[0], k_0_min=param_min[3], lambd_min=param_min[-1],
         maxwind=maxwind, z_f=z_f,
-        save=output_path+timestamp+'_'+run_id)
+        save=output_path+timestamp+'_'+run_id+'1')
 
-# extract data
-ftemp = np.mean(data_orig['ftemp'].to_numpy(np.float64))
+data2, dtlist2, idx2 = cfl_interpolation5(data_orig2, dz0=dz0, ngrid=ngrid,
+        k_mol = k_mol,
+        k_eddy_max=param_max[0], k_0_min=param_min[3], lambd_min=param_min[-1],
+        maxwind=maxwind, z_f=z_f,
+        save=output_path+timestamp+'_'+run_id+'2')
 
-times = data['times'].to_numpy(np.float64)
-wind = data['wind'].to_numpy(np.float64)
-swrad = data['swrad'].to_numpy(np.float64)
-humid = data['humid'].to_numpy(np.float64)
-atemp_rel = data['atemp'].to_numpy(np.float64) - data['ftemp'].to_numpy(np.float64) + ftemp
+# extract data from dataset 1
+ftemp1 = np.mean(data_orig1['ftemp'].to_numpy(np.float64))
 
-times_orig = data_orig['times'].to_numpy(np.float64)
-sst_data = data_orig['sst'].to_numpy(np.float64) - data_orig['ftemp'].to_numpy(np.float64) + ftemp
-sst_err = data_orig['sst_err'].to_numpy(np.float64) *0.01
+times1 = data1['times'].to_numpy(np.float64)
+wind1 = data1['wind'].to_numpy(np.float64)
+swrad1 = data1['swrad'].to_numpy(np.float64)
+humid1 = data1['humid'].to_numpy(np.float64)
+atemp_rel1 = data1['atemp'].to_numpy(np.float64) - data1['ftemp'].to_numpy(np.float64) + ftemp1
 
+times_orig1 = data_orig1['times'].to_numpy(np.float64)
+sst_data1 = data_orig1['sst'].to_numpy(np.float64) - data_orig1['ftemp'].to_numpy(np.float64)
+sst_err1 = data_orig1['sst_err'].to_numpy(np.float64)
+
+# extract data from dataset 2
+ftemp2 = np.mean(data_orig2['ftemp'].to_numpy(np.float64))
+
+times2 = data2['times'].to_numpy(np.float64)
+wind2 = data2['wind'].to_numpy(np.float64)
+swrad2 = data2['swrad'].to_numpy(np.float64)
+humid2 = data2['humid'].to_numpy(np.float64)
+atemp_rel2 = data2['atemp'].to_numpy(np.float64) - data2['ftemp'].to_numpy(np.float64) + ftemp2
+
+times_orig2 = data_orig2['times'].to_numpy(np.float64)
+sst_data2 = data_orig2['sst'].to_numpy(np.float64) - data_orig2['ftemp'].to_numpy(np.float64)
+sst_err2 = data_orig2['sst_err'].to_numpy(np.float64)
 
 # Define likelihood function
 def bayesian_likelihood(params):
     kappa, mu, attenu, kappa0, lambd = params
-    simu = diusst(
-            times, atemp_rel, swrad, u_data=wind, sa_data=humid, T_f=ftemp,
+    simu1 = diusst(
+            times1, atemp_rel1, swrad1, u_data=wind1, sa_data=humid1, T_f=ftemp1,
             k_eddy=kappa, mu=mu, attenu=attenu, k_0=kappa0, lambd=lambd,
             opac=opac, k_mol=k_mol,
             dz=dz0, ngrid=ngrid)
-    sst_model = simu[0][:,0]
-    print(len(sst_model[idxlist]),len(sst_data))
-    mse = np.sum(((sst_model[idxlist] - sst_data[:-1])/sst_err[:-1])**2)
-    return mse
+    simu2 = diusst(
+            times2, atemp_rel2, swrad2, u_data=wind2, sa_data=humid2, T_f=ftemp2,
+            k_eddy=kappa, mu=mu, attenu=attenu, k_0=kappa0, lambd=lambd,
+            opac=opac, k_mol=k_mol,
+            dz=dz0, ngrid=ngrid)
+    sst_model1 = simu1[:,0]-simu1[:,ref_level]
+    sst_model2 = simu2[:,0]-simu1[:,ref_level]
+    mse = np.sum(((sst_model1[idx1] - sst_data1[:-1])**2/sst_err1[:-1])**2) + np.sum(((sst_model2[idx2] - sst_data2[:-1])**2/sst_err2[:-1])**2)
+    return mse/100, simu1, simu2
 
 # Define posterior distribution function
 def log_prob(x):

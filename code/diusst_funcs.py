@@ -8,14 +8,14 @@ from scipy.optimize import fsolve
 
 ###############################################################################
 
-def find_eps(eps,N,dz0):
-    return -dz0/10*(1-eps**(N-1)) - eps +1
+def find_eps(eps,N,dz0,z_f):
+    return -dz0/z_f*(1-eps**(N-1)) - eps +1
 
 def make_mesh(dz0,N,z_f=10, verbose=False):
     z = np.zeros(N+2)
     z[0] = dz0
 
-    eps = fsolve(find_eps,1.5,args=(N+1,dz0))[0]
+    eps = fsolve(find_eps,1.5,args=(N+1,dz0,z_f))[0]
 
     for i in range(2,N+2):
         z[i] = - dz0*(1-eps**(i-1))/(1-eps)

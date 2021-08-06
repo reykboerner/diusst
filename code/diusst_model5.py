@@ -75,27 +75,26 @@ def diusst_bayesian(
     # boundary condition
     T[:,-1] = np.ones(N_t)*T_f
 
-    # Eddy diffusivity
+    # solar angle
+    solangle = 2*np.pi*times/86400 + np.pi
+
+    # initialize diffusivity, mixing coefficient, heat fluxes
     kappa = np.zeros((N_t,N_z))
     dkappadz = np.zeros((N_t,N_z))
-
-    for i in range(N_z):
-        #kappa[:,i] = (k_mol - k_eddy * z[i]/z_f *(np.minimum(u,np.ones(N_t)*maxwind))**2)
-        kappa[:,i] = k_mol + k_eddy * (1-k_0*np.exp(z[i]/lambd))/(1-k_0*np.exp(-z_f/lambd)) * (np.minimum(maxwind, u))**2
-        dkappadz[:,i] = - k_eddy*k_0/lambd * np.exp(z[i]/lambd) /(1-k_0*np.exp(-z_f/lambd)) * (np.minimum(maxwind, u))**2
+    mix = np.zeros(N_z)
+    R_sw = np.zeros((N_t,N_z))
+    Qs, Ql, Rlw = [], [], []
 
     # mixing coefficient
-    mix = np.zeros(N_z)
     mix[1:-1] = mu * np.abs(z[2:]-z[1:-1]) / np.abs(z[1:-1]-z[-1])
 
-    # initialize heat fluxes
-    Qs, Ql, Rlw = [], [], []
-    R_sw = np.zeros((N_t,N_z))
-
-    # solar irradiance
-    solangle = 2*np.pi*times/86400 + np.pi
     for i in range(N_z):
+        # diffusivity
+        kappa[:,i] = k_mol + k_eddy * (1-k_0*np.exp(z[i]/lambd))/(1-k_0*np.exp(-z_f/lambd)) * (np.minimum(maxwind, u))**2
+        dkappadz[:,i] = - k_eddy*k_0/lambd * np.exp(z[i]/lambd) /(1-k_0*np.exp(-z_f/lambd)) * (np.minimum(maxwind, u))**2
+        #solar radiation
         R_sw[:,i] = sw_data * np.exp(attenu/np.cos(snell(solangle))*z[i])
+
 
     # stretched grid prerequisites
     dv1 = dndz(z, dz0=dz,eps=stretch)
@@ -121,4 +120,4 @@ def diusst_bayesian(
                 + grad_backward(Q,dv1)/(rho_w*c_p)
                 )
 
-    return [T[:,1:], z[1:], times]
+    return T[:,1:]
