@@ -58,9 +58,8 @@ diffu = 1
 opac = 1
 k_mol = 1e-7
 maxwind = 10
-ref_level = 21
+ref_level = int(21)
 
-# Dataset
 data_path = '../data/bayesian_training/'
 data_filename = 'training_minnett_err-boatspd-radio_humid10.csv'
 data_interval1 = [96,413]
@@ -77,7 +76,7 @@ use_backend = True
 print('==== Bayesian sampling 5 parameters, Run ID '+run_id+' ====')
 print('Start time: '+str(timestamp))
 print('Data loaded from '+data_path+data_filename)
-print('Optimization with respect to reference depth = '+round(make_mesh(0.1,40,z_f=10)[0][ref_level],3))
+print('Optimization with respect to reference depth = '+str(round(make_mesh(0.1,40,z_f=10)[0][ref_level],3)))
 
 # Load dataset
 data_orig1 = pd.read_csv(data_path+data_filename)[data_interval1[0]:data_interval1[1]]
@@ -136,7 +135,7 @@ def bayesian_likelihood(params):
             opac=opac, k_mol=k_mol,
             dz=dz0, ngrid=ngrid)
     sst_model1 = simu1[:,0]-simu1[:,ref_level]
-    sst_model2 = simu2[:,0]-simu1[:,ref_level]
+    sst_model2 = simu2[:,0]-simu2[:,ref_level]
     mse = np.sum(((sst_model1[idx1] - sst_data1[:-1])**2/sst_err1[:-1])**2) + np.sum(((sst_model2[idx2] - sst_data2[:-1])**2/sst_err2[:-1])**2)
     return mse/100, simu1, simu2
 
