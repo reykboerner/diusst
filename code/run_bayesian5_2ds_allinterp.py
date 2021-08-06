@@ -1,5 +1,5 @@
 """
-run_bayesian5_2ds.py
+run_bayesian5_2ds_allinterp.py
 Python script to run Bayesian analysis for DIUSST model
 """
 
@@ -82,27 +82,9 @@ print('Optimization with respect to reference depth = '+str(round(make_mesh(0.1,
 data_orig1 = pd.read_csv(data_path+data_filename)[data_interval1[0]:data_interval1[1]]
 data_orig2 = pd.read_csv(data_path+data_filename)[data_interval2[0]:data_interval2[1]]
 
-# interpolate to meet CFL condition
-data1, dtlist1, idx1 = cfl_interpolation5(data_orig1, dz0=dz0, ngrid=ngrid,
-        k_mol = k_mol,
-        k_eddy_max=param_max[0], k_0_min=param_min[3], lambd_min=param_min[-1],
-        maxwind=maxwind, z_f=z_f,
-        save=output_path+timestamp+'_'+run_id+'1')
-
-data2, dtlist2, idx2 = cfl_interpolation5(data_orig2, dz0=dz0, ngrid=ngrid,
-        k_mol = k_mol,
-        k_eddy_max=param_max[0], k_0_min=param_min[3], lambd_min=param_min[-1],
-        maxwind=maxwind, z_f=z_f,
-        save=output_path+timestamp+'_'+run_id+'2')
 
 # extract data from dataset 1
 ftemp1 = np.mean(data_orig1['ftemp'].to_numpy(np.float64))
-
-times1 = data1['times'].to_numpy(np.float64)
-wind1 = data1['wind'].to_numpy(np.float64)
-swrad1 = data1['swrad'].to_numpy(np.float64)
-humid1 = data1['humid'].to_numpy(np.float64)
-atemp_rel1 = data1['atemp'].to_numpy(np.float64) - data1['ftemp'].to_numpy(np.float64) + ftemp1
 
 times_orig1 = data_orig1['times'].to_numpy(np.float64)
 sst_data1 = data_orig1['sst'].to_numpy(np.float64) - data_orig1['ftemp'].to_numpy(np.float64)
@@ -111,12 +93,6 @@ sst_err1 = data_orig1['sst_err'].to_numpy(np.float64)
 # extract data from dataset 2
 ftemp2 = np.mean(data_orig2['ftemp'].to_numpy(np.float64))
 
-times2 = data2['times'].to_numpy(np.float64)
-wind2 = data2['wind'].to_numpy(np.float64)
-swrad2 = data2['swrad'].to_numpy(np.float64)
-humid2 = data2['humid'].to_numpy(np.float64)
-atemp_rel2 = data2['atemp'].to_numpy(np.float64) - data2['ftemp'].to_numpy(np.float64) + ftemp2
-
 times_orig2 = data_orig2['times'].to_numpy(np.float64)
 sst_data2 = data_orig2['sst'].to_numpy(np.float64) - data_orig2['ftemp'].to_numpy(np.float64)
 sst_err2 = data_orig2['sst_err'].to_numpy(np.float64)
@@ -124,6 +100,32 @@ sst_err2 = data_orig2['sst_err'].to_numpy(np.float64)
 # Define likelihood function
 def bayesian_likelihood(params):
     kappa, mu, attenu, kappa0, lambd = params
+
+    # interpolate to meet CFL condition
+    data1, dtlist1, idx1 = cfl_interpolation5(data_orig1, dz0=dz0, ngrid=ngrid,
+            k_mol = k_mol,
+            k_eddy_max=kappa, k_0_min=kappa0, lambd_min=lambd,
+            maxwind=maxwind, z_f=z_f,
+            save=None,verbose=False)
+
+    data2, dtlist2, idx2 = cfl_interpolation5(data_orig2, dz0=dz0, ngrid=ngrid,
+            k_mol = k_mol,
+            k_eddy_max=kappa, k_0_min=kappa0, lambd_min=lambd,
+            maxwind=maxwind, z_f=z_f,
+            save=None,verbose=False)
+
+    times1 = data1['times'].to_numpy(np.float64)
+    wind1 = data1['wind'].to_numpy(np.float64)
+    swrad1 = data1['swrad'].to_numpy(np.float64)
+    humid1 = data1['humid'].to_numpy(np.float64)
+    atemp_rel1 = data1['atemp'].to_numpy(np.float64) - data1['ftemp'].to_numpy(np.float64) + ftemp1
+
+    times2 = data2['times'].to_numpy(np.float64)
+    wind2 = data2['wind'].to_numpy(np.float64)
+    swrad2 = data2['swrad'].to_numpy(np.float64)
+    humid2 = data2['humid'].to_numpy(np.float64)
+    atemp_rel2 = data2['atemp'].to_numpy(np.float64) - data2['ftemp'].to_numpy(np.float64) + ftemp2
+
     simu1 = diusst(
             times1, atemp_rel1, swrad1, u_data=wind1, sa_data=humid1, T_f=ftemp1,
             k_eddy=kappa, mu=mu, attenu=attenu, k_0=kappa0, lambd=lambd,
