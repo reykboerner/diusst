@@ -28,8 +28,10 @@ def diusst_bayesian(
     attenu=1,                       # light attenuation coefficient (in 1/m)
     mu=1,                           # linear mixing coefficient μ (in 1/s)
     k_eddy = 1e-4,                  # eddy diffusivity coefficient (in m^2/s)
-    k_0 = 1,                        # kappa 0 (4th parameter)
-    lambd = 1,                      # trapping depth lambda (in m) (5th parameter)
+    k_0 = 0.8,                        # kappa 0 (4th parameter)
+    lambd = 3,                      # trapping depth lambda (in m) (5th parameter)
+    strat = 5,                      # normalization temperature of stratification term
+    stratdepth = 1,                 # depth at which the stratification term is evaluated
     # constants
     k_mol = 1e-7,                   # molecular diffusivity of sea water (in m^2/s)
     n_w = 1.34,                     # refractive index of sea water
@@ -58,6 +60,8 @@ def diusst_bayesian(
     N_z = ngrid + 2
     z, stretch = make_mesh(dz,ngrid,z_f=z_f)
 
+    zidx_strat = np.where(z>-stratdepth)[0][-1]
+
     # Define time array
     N_t = len(times)
     dt = times[1:]-times[:-1]
@@ -79,8 +83,6 @@ def diusst_bayesian(
     solangle = 2*np.pi*times/86400 + np.pi
 
     # initialize diffusivity, mixing coefficient, heat fluxes
-    kappa = np.zeros((N_t,N_z))
-    dkappadz = np.zeros((N_t,N_z))
     mix = np.zeros(N_z)
     R_sw = np.zeros((N_t,N_z))
     Qs, Ql, Rlw = [], [], []
@@ -89,12 +91,8 @@ def diusst_bayesian(
     mix[1:-1] = mu * np.abs(z[2:]-z[1:-1]) / np.abs(z[1:-1]-z[-1])
 
     for i in range(N_z):
-        # diffusivity
-        kappa[:,i] = k_mol + k_eddy * (1-k_0*np.exp(z[i]/lambd))/(1-k_0*np.exp(-z_f/lambd)) * (np.minimum(maxwind, u))**2
-        dkappadz[:,i] = - k_eddy*k_0/lambd * np.exp(z[i]/lambd) /(1-k_0*np.exp(-z_f/lambd)) * (np.minimum(maxwind, u))**2
         #solar radiation
         R_sw[:,i] = sw_data * np.exp(attenu/np.cos(snell(solangle))*z[i])
-
 
     # stretched grid prerequisites
     dv1 = dndz(z, dz0=dz,eps=stretch)
@@ -103,10 +101,16 @@ def diusst_bayesian(
     # Time integration
     for n in range(1, N_t):
 
+        # diffusivity
+        S = min( max((T[n-1,1]-T[n-1,zidx_strat])/strat, 0) , k_0)
+
+        kappa = k_mol + k_eddy * (1-S*np.exp(z/lambd))/(1-S*np.exp(-z_f/lambd)) * (min(maxwind, u[n-1]))**2
+        dkappadz = - k_eddy*S/lambd * np.exp(z/lambd) /(1-S*np.exp(-z_f/lambd)) * (min(maxwind, u[n-1]))**2
+
         # surface fluxes
-        R_lw = sb_const * (opac*(Ta_data[n-1])**4 - (T[n-1,1])**4)
-        Q_s  = rho_a * c_p_a * C_s * max(0.5, u[n-1]) * (Ta_data[n-1] - T[n-1,1])
-        Q_l  = rho_a * L_evap * C_l * max(0.5, u[n-1]) * (s_a[n-1] - s_sat(T[n-1,1], rho_a, R_v))
+        R_lw = sb_const * (opac*(Ta_data[n-1])**4 - (T[n-1,0])**4)
+        Q_s  = rho_a * c_p_a * C_s * max(0.5, u[n-1]) * (Ta_data[n-1] - T[n-1,0])
+        Q_l  = rho_a * L_evap * C_l * max(0.5, u[n-1]) * (s_a[n-1] - s_sat(T[n-1,0], rho_a, R_v))
 
         # Total heat flux
         Q = R_sw[n-1]
@@ -115,7 +119,7 @@ def diusst_bayesian(
 
         # Euler integration
         T[n] = T[n-1] + dt[n-1] * (
-                kappa[n-1]*laplace_central(T[n-1],dv1,dv2) + dkappadz[n-1]*grad_central(T[n-1],dv1)
+                kappa*laplace_central(T[n-1],dv1,dv2) + dkappadz*grad_central(T[n-1],dv1)
                 - mix*(T[n-1]-T_f)
                 + grad_backward(Q,dv1)/(rho_w*c_p)
                 )

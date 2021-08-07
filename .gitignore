@@ -12,5 +12,6 @@
 *.blg
 *.fdb_latexmk
 *.fls
+*.h5
 /code/__pycache__/
 /output/
