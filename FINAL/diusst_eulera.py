@@ -101,9 +101,9 @@ def diusst_eulera(
     for n in range(1, N_t):
 
         # surface fluxes
-        R_lw = sb_const * (opac*(Ta_data[n-1])**4 - (T[n-1,0])**4)
-        Q_s  = rho_a * c_p_a * C_s * max(0.5, u[n-1]) * (Ta_data[n-1] - T[n-1,0])
-        Q_l  = rho_a * L_evap * C_l * max(0.5, u[n-1]) * (s_a[n-1] - s_sat(T[n-1,0], rho_a, R_v))
+        R_lw = sb_const * (opac*(Ta_data[n-1])**4 - (T[n-1,1])**4)
+        Q_s  = rho_a * c_p_a * C_s * max(0.5, u[n-1]) * (Ta_data[n-1] - T[n-1,1])
+        Q_l  = rho_a * L_evap * C_l * max(0.5, u[n-1]) * (s_a[n-1] - s_sat(T[n-1,1], rho_a, R_v))
 
         # Total heat flux
         Q = R_sw[n-1]
