@@ -32,12 +32,14 @@ def simulate_eulerc(params,
     k_mol = 1e-7,
     maxwind = 10,
     windstrength = 1,
+    windcos=1,
+    verbose=False,
     ):
 
     times_orig = np.linspace(0,2*86400,2*24*60)
     swrad_orig = q_sw(times_orig,1)*1000
     atemp_orig = T_a(times_orig,301,299)
-    wind_orig = 1 + windstrength + 1*np.cos(times_orig/86400*2*np.pi)
+    wind_orig = 1 + windstrength + windcos*np.cos(times_orig/86400*2*np.pi)
     humid_orig = np.ones(len(times_orig)) * 0.01
     ftemp_orig = np.ones(len(times_orig)) * 300
     sst_orig = np.zeros(len(times_orig))
@@ -53,7 +55,7 @@ def simulate_eulerc(params,
     data, dtlist, idx = cfl_interpolation5(data_orig, dz0=dz0, ngrid=ngrid,
         k_mol = k_mol,
         k_eddy_max=k_eddy, k_0_min=k0, lambd_min=gamma,
-        maxwind=maxwind, z_f=z_f)
+        maxwind=maxwind, z_f=z_f,verbose=verbose)
 
     # extract data
     ftemp = np.mean(data['ftemp'].to_numpy(np.float64))

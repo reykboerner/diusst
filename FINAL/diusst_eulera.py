@@ -97,6 +97,8 @@ def diusst_eulera(
     dv1 = dndz(z, dz0=dz,eps=stretch)
     dv2 = dndz2(z, dz0=dz,eps=stretch)
 
+    Qs, Ql, Rlw, Rsw = [], [], [], []
+
     # Time integration
     for n in range(1, N_t):
 
@@ -117,4 +119,9 @@ def diusst_eulera(
                 + grad_backward(Q,dv1)/(rho_w*c_p)
                 )
 
-    return [T[:,1:], z[1:], times]
+        Qs.append(Q_s)
+        Ql.append(Q_l)
+        Rlw.append(R_lw)
+        Rsw.append(R_sw[n-1,1])
+
+    return [T[:,1:], z[1:], times, [Qs,Ql,Rlw,Rsw]]
