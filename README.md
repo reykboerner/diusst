@@ -1,5 +1,7 @@
-# diusst
-A simple model of diurnal sea surface temperature evolution
+# DiuSST
+An idealized model of diurnal sea surface temperature evolution, designed as an interactive boundary condition for idealized atmospheric simulations.
+
+> Note: This repository is currently being reworked for enhanced user-friendliness and will soon feature additional descriptions.
 
 ## Quick start: Bayesian inference
 
@@ -27,3 +29,10 @@ Once you have checked the run settings, execute `python3 run_bayesian.py` to run
 ### Post-processing
 While running, the script continuously writes the walker positions and log probabilities of the MCMC run into an `.h5` file labeled by a timestamp and run ID. This file can be used to recover output in case the run does not finish successfully.
 After successful completion, the script stores the output in several files in the folder `output`.
+
+## Acknowledgements
+This work has been conducted within the Atmospheric Complexity Group at the Niels Bohr Institute, University of Copenhagen, Denmark.
+
+Collaborators: Romain Fiévet, Jan O. Haerter
+
+We gratefully acknowledge Peter Minnett for providing meteorological and oceanographic data sets from the MOCE-5 cruise contained in this repository. The development and deployment of the instruments used during the cruise was funded by NASA.
