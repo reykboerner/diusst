@@ -1,7 +1,7 @@
 # DiuSST - Diurnal sea surface temperature model
 A simple model of diurnal sea surface warming in the tropical ocean, designed as an interactive boundary condition for idealized atmospheric simulations.
 
-<p align = "center"><img src="https://github.com/reykboerner/diusst/blob/master/docs/header-image.png" alt="header-image" width="70%"/></p>
+<p align = "center"><img src="https://github.com/reykboerner/diusst/blob/master/docs/header-image.png" alt="header-image" width="90%"/></p>
 
 ## About
 This repository contains code for running and analyzing the DiuSST model developed in the context of my master [thesis](https://github.com/reykboerner/diusst/blob/master/docs/boerner_MSc_thesis.pdf). Have a look at the [summary](https://github.com/reykboerner/diusst/blob/master/docs/summary.md) to learn more.
@@ -38,6 +38,7 @@ In the Python script `diusst_model.py`, the model is written as a Python functio
 | `lambd` | Trapping depth $\lambda$, used in EXP and STAB models (float, $\lambda>0$) | m |
 | `sigma` | Surface suppressivity $\sigma$, used in EXP and STAB models (float, $0 \leq \sigma \leq 1$) |  |
 | `z_ref` | Reference depth $z_r$, used in STAB model (float) | m |
+
 #### Model options
 | Label         | Description     | Values |
 |--------------|-----------|------------|
@@ -55,7 +56,9 @@ In the Python script `diusst_model.py`, the model is written as a Python functio
 | `z_f` | Foundation depth (float, default `10`) | m |
 | `dz` | Vertical grid spacing at surface (float, default `0.05`) | m |
 | `ngrid` | Number of vertical grid points*. If `None`, then a uniform grid with spacing `dz` is used (int, default `None`) |  |
+
 (*) excluding the boundary grid points, i.e. the foundation point and atmospheric dummy point.
+
 #### Constants
 | Label         | Description     | Units | Value |
 |--------------|-----------|------------|---|
