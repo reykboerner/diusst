@@ -51,6 +51,9 @@ def diusst(
     gas_const = 461.51):        # gas constant of water vapor, J/K/kg):
 
     # Define vertical grid
+    if ngrid is None:
+        ngrid = int(z_f/dz)
+
     N_z = ngrid + 2
     z, stretch = make_mesh(dz,ngrid,z_f=z_f)
     zidx_ref = np.where(z>-z_ref)[0][-1] # used only for STAB model
@@ -103,8 +106,8 @@ def diusst(
 
     elif diffu_type == 'EXP':
         for i in range(N_z):
-            diffu[:,i] = k_mol + wind_factor * kappa * (1-sigma*np.exp(z[i]/lambd))/(1-k_0*np.exp(-z_f/lambd))
-            ddiffu[:,i] = - wind_factor * kappa / lambd * sigma*np.exp(z[i]/lambd) /(1-k_0*np.exp(-z_f/lambd))
+            diffu[:,i] = k_mol + wind_factor * kappa * (1-sigma*np.exp(z[i]/lambd))/(1-sigma*np.exp(-z_f/lambd))
+            ddiffu[:,i] = - wind_factor * kappa / lambd * sigma*np.exp(z[i]/lambd) /(1-sigma*np.exp(-z_f/lambd))
 
     # Time integration
     for n in range(1, N_t):
