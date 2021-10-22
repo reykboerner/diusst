@@ -4,10 +4,50 @@ A simple model of diurnal sea surface warming in the tropical ocean, designed as
 <p align = "center"><img src="https://github.com/reykboerner/diusst/blob/master/docs/header-image.png" alt="header-image" width="90%"/></p>
 
 ## About
-This repository contains code for running and analyzing the DiuSST model developed in the context of my master [thesis](https://github.com/reykboerner/diusst/blob/master/docs/boerner_MSc_thesis.pdf). Have a look at the [summary](https://github.com/reykboerner/diusst/blob/master/docs/summary.md) to learn more.
+This repository contains code for running and analyzing the DiuSST model developed in the context of my master's project. Have a look at the [summary](https://github.com/reykboerner/diusst/blob/master/docs/summary.md) or [thesis](https://github.com/reykboerner/diusst/blob/master/docs/boerner_MSc_thesis.pdf) to learn more.
 
 Below, you will find information on how to use the code.
 ***
+
+## Getting started
+The code essentially serves two purposes:
+* run simulations with the DiuSST model to estimate the response of near-surface sea temperature to atmospheric forcing
+* perform Bayesian inference to estimate model parameters given a dataset
+
+#### Prerequisites
+Clone the repo to your local hard drive using `git clone https://github.com/reykboerner/diusst.git`.
+
+The code is written in Python3 and requires the following Python modules:
+* numpy
+* scipy
+* pandas
+
+Additionally, for Bayesian inference we require
+* emcee
+* h5py
+
+Use `pip install <modulename>` to install the packages.
+
+### Running simulations
+The [Jupyter notebook tutorial](https://github.com/reykboerner/diusst/blob/master/tutorials/run_diusst.ipynb) provides an example of how to run the model and generate a plot like the one above. It uses a dataset from the MOCE-5 cruise, which is included in this repository.
+
+As shown in the tutorial, running the DiuSST model corresponds to calling the `diusst` function. Model parameters and settings are adjusted through the arguments of this function. For a complete list of required and optional arguments, including their description and default values, click [here](#documentation).
+
+### Bayesian inference
+
+#### Modify settings
+Settings of the MCMC run, parameter limits, the dataset to use etc. can be specified in the `run_bayesian.py` file found in `code`. The section where to edit these settings is labeled `# RUN SETTINGS` in the script.
+
+#### Run
+The script `run_bayesian.py` will read the specified data from the `data` folder and load `interpolation.py` to interpolate this data in time (ensuring that the CFL number meets the stability condition of the numerical model simulation).
+To run the model, the script will load required functions from the `diusst_model.py` and `diusst_funcs.py` files.
+
+Once you have checked the run settings, execute `python3 run_bayesian.py` to run the script.
+
+#### Post-processing
+While running, the script continuously writes the walker positions and log probabilities of the MCMC run into an `.h5` file labeled by a timestamp and run ID. This file can be used to recover output in case the run does not finish successfully.
+After successful completion, the script stores the output in several files in the folder `output`.
+
 
 ## Documentation
 
@@ -76,32 +116,6 @@ In the Python script `diusst_model.py`, the model is written as a Python functio
 | `gas_const` | Gas constant of water vapor | J/(kg K) | 461.51 |
 
 
-### Quick start: Bayesian inference
-
-#### Prerequisites
-Clone the repo to your local hard drive using `git clone https://github.com/reykboerner/diusst.git`.
-
-The code runs in Python3 and requires the following python modules:
-* numpy
-* scipy
-* pandas
-* emcee
-* h5py
-
-Use `pip install <modulename>` to install the packages.
-
-#### Modify settings
-Settings of the MCMC run, parameter limits, the dataset to use etc. can be specified in the `run_bayesian.py` file found in `code`. The section where to edit these settings is labeled `# RUN SETTINGS` in the script.
-
-#### Run
-The script `run_bayesian.py` will read the specified data from the `data` folder and load `interpolation.py` to interpolate this data in time (ensuring that the CFL number meets the stability condition of the numerical model simulation).
-To run the model, the script will load required functions from the `diusst_model.py` and `diusst_funcs.py` files.
-
-Once you have checked the run settings, execute `python3 run_bayesian.py` to run the script.
-
-#### Post-processing
-While running, the script continuously writes the walker positions and log probabilities of the MCMC run into an `.h5` file labeled by a timestamp and run ID. This file can be used to recover output in case the run does not finish successfully.
-After successful completion, the script stores the output in several files in the folder `output`.
 ***
 
 ## Acknowledgements
