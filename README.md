@@ -1,13 +1,21 @@
 # DiuSST - Diurnal sea surface temperature model
 A simple model of diurnal sea surface warming in the tropical ocean, designed as an interactive boundary condition for idealized atmospheric simulations.
 
+> #### Quick links
+> * [Thesis](https://github.com/reykboerner/diusst/blob/master/docs/boerner_MSc_thesis.pdf) (detailed description of the model in chapter 5, results in chapter 6)
+> * [Presentation slides](https://github.com/reykboerner/diusst/blob/master/docs/boerner_MSc_defense.pdf) (from the thesis defense)
+> * [Starter tutorial](https://github.com/reykboerner/diusst/blob/master/tutorials/run_diusst.ipynb) (introductory example of how to run the model in Python)
+>
+> Contact: [reyk.boerner@reading.ac.uk](mailto:reyk.boerner@reading.ac.uk)
+
+
 <p align = "center"><img src="https://github.com/reykboerner/diusst/blob/master/docs/header-image.png" alt="header-image" width="90%"/></p>
 
 ## About
-This repository contains code for running and analyzing the DiuSST model developed in the context of my master's project. Have a look at the [summary](https://github.com/reykboerner/diusst/blob/master/docs/summary.md) or [thesis](https://github.com/reykboerner/diusst/blob/master/docs/boerner_MSc_thesis.pdf) to learn more.
+This repository contains code for running and analyzing the DiuSST model developed in the context of my master project. Have a look at the [summary](https://github.com/reykboerner/diusst/blob/master/docs/summary.md) or [thesis](https://github.com/reykboerner/diusst/blob/master/docs/boerner_MSc_thesis.pdf) to learn more. A paper about this work is in preparation and will be linked here when available.
 
-Below, you will find information on how to use the code.
-***
+Below, you will find information on how to use the code. (This repository is currently being expanded.)
+
 
 ## Getting started
 The code essentially serves two purposes:
@@ -124,3 +132,5 @@ This work has been conducted within the Atmospheric Complexity Group at the Niel
 Collaborators: Romain Fiévet, Jan O. Haerter
 
 We gratefully acknowledge Peter Minnett for providing meteorological and oceanographic data sets from the MOCE-5 cruise contained in this repository. The development and deployment of the instruments used during the cruise was funded by NASA.
+
+I would further like to thank Peter Ditlevsen for co-supervising this project and Gorm G. Jensen for helpful discussions.
