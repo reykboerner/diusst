@@ -3,6 +3,7 @@ A simple model of diurnal sea surface warming in the tropical ocean, designed as
 
 > #### Quick links
 > * [Thesis](https://github.com/reykboerner/diusst/blob/master/docs/boerner_MSc_thesis.pdf) (detailed description of the model in chapter 5, results in chapter 6)
+> * [Video presentation](https://youtu.be/KdOWF_fzRLE) (15-minute recorded talk)
 > * [Presentation slides](https://github.com/reykboerner/diusst/blob/master/docs/boerner_MSc_defense.pdf) (from the thesis defense)
 > * [Starter tutorial](https://github.com/reykboerner/diusst/blob/master/tutorials/run_diusst.ipynb) (introductory example of how to run the model in Python)
 >
