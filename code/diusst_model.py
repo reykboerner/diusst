@@ -34,7 +34,7 @@ def diusst(
     opac=1,                     # opacity of the vertically integrated atmosphere to longwave radiation
     # Model domain
     z_f=10,                     # Foundation depth (in m)
-    dz=0.05,                    # depth resolution (if streched grid, this is the thickness of the top layer) (in m)
+    dz=0.10,                    # depth resolution (if streched grid, this is the thickness of the top layer) (in m)
     ngrid = None,               # number of vertical grid points (excluding foundation and air dummy). If None, then a uniform mesh is generated with grid spacing dz
     # Constants
     k_mol = 1e-7,               # molecular diffusivity of sea water (in m^2/s)
@@ -104,6 +104,11 @@ def diusst(
             diffu[:,i] = k_mol + wind_factor * kappa * np.abs(z[i]/z_f)
             ddiffu[:,i] = - wind_factor * kappa / z_f
 
+    elif diffu_type == 'LIN2':
+        for i in range(N_z):
+            diffu[:,i] = k_mol + wind_factor * kappa * (1 + sigma*(np.abs(z[i]/z_f)-1))
+            ddiffu[:,i] = - wind_factor * kappa * sigma / z_f
+
     elif diffu_type == 'EXP':
         for i in range(N_z):
             diffu[:,i] = k_mol + wind_factor * kappa * (1-sigma*np.exp(z[i]/lambd))/(1-sigma*np.exp(-z_f/lambd))
@@ -126,6 +131,11 @@ def diusst(
             S = min( max((T[n-1,1]-T[n-1,zidx_ref]), 0) , 1)
             diffu[n-1] = k_mol + wind_factor[n-1] * kappa * (1-S*sigma*np.exp(z/lambd))/(1-S*sigma*np.exp(-z_f/lambd))
             ddiffu[n-1] = - wind_factor[n-1] * kappa * S*sigma/lambd * np.exp(z/lambd) /(1-S*sigma*np.exp(-z_f/lambd))
+
+        elif diffu_type == 'STAB2':
+            S = min( max((T[n-1,1]-T[n-1,zidx_ref]), 0) , 1)
+            diffu[n-1] = k_mol + wind_factor[n-1] * kappa * (1 + S*sigma*(np.abs(z[i]/z_f)-1))
+            ddiffu[n-1] = - wind_factor[n-1] * kappa * S * sigma / z_f
 
         # Euler integration
         T[n] = T[n-1] + dt[n-1] * (
