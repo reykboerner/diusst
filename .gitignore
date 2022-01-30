@@ -14,4 +14,4 @@
 *.fls
 /code/__pycache__/
 /output_files/
-/old/
+**/old/**
