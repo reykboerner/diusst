@@ -2,7 +2,7 @@
 A simple model of diurnal sea surface warming in the tropical ocean, designed as an interactive boundary condition for idealized atmospheric simulations.
 
 > #### Quick links
-> * [Thesis](https://github.com/reykboerner/diusst/blob/master/docs/boerner_MSc_thesis.pdf) (detailed description of the model in chapter 5, results in chapter 6)
+> * [Thesis](https://nbi.ku.dk/english/theses/masters-theses/reyk-borner/boerner_MSc_thesis.pdf) (detailed description of the model in chapter 5, results in chapter 6)
 > * [Video presentation](https://youtu.be/KdOWF_fzRLE) (15-minute recorded talk)
 > * [Presentation slides](https://github.com/reykboerner/diusst/blob/master/docs/boerner_MSc_defense.pdf) (from the thesis defense)
 > * [Starter tutorial](https://github.com/reykboerner/diusst/blob/master/tutorials/run_diusst.ipynb) (introductory example of how to run the model in Python)
@@ -13,7 +13,7 @@ A simple model of diurnal sea surface warming in the tropical ocean, designed as
 <p align = "center"><img src="https://github.com/reykboerner/diusst/blob/master/docs/header-image.png" alt="header-image" width="90%"/></p>
 
 ## About
-This repository contains code for running and analyzing the DiuSST model developed in the context of my master project. Have a look at the [summary](https://github.com/reykboerner/diusst/blob/master/docs/summary.md) or [thesis](https://github.com/reykboerner/diusst/blob/master/docs/boerner_MSc_thesis.pdf) to learn more. A paper about this work is in preparation and will be linked here when available.
+This repository contains code for running and analyzing the DiuSST model developed in the context of my master project. Have a look at the [summary](https://github.com/reykboerner/diusst/blob/master/docs/summary.md) or [thesis](https://nbi.ku.dk/english/theses/masters-theses/reyk-borner/boerner_MSc_thesis.pdf) to learn more. A paper about this work is in preparation and will be linked here when available.
 
 Below, you will find information on how to use the code. (This repository is currently being expanded.)
 
@@ -61,7 +61,7 @@ After successful completion, the script stores the output in several files in th
 ## Documentation
 
 ### The model
-A detailed description of the model is provided in chapter 5 of the [thesis](https://github.com/reykboerner/diusst/blob/master/docs/boerner_MSc_thesis.pdf).
+A detailed description of the model is provided in chapter 5 of the [thesis](https://nbi.ku.dk/english/theses/masters-theses/reyk-borner/boerner_MSc_thesis.pdf).
 
 In the Python script `diusst_model.py`, the model is written as a Python function `diusst` taking the following positional and keyword arguments:
 
