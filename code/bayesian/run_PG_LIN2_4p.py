@@ -29,7 +29,7 @@ mu0 = 0.006
 mustd = 0.0015
 
 # DIUSST model
-diffu_type = 'EXP'
+diffu_type = 'LIN2'
 z_f = 10
 dz = 0.10
 ngrid = 40
