@@ -76,7 +76,7 @@ def cfl_interpolation(data,
 
         # Interpolate
         times_new = np.arange(times[i-1], times[i], dt)
-        f = interp1d(times[i-1:i+1], series[:,i-1:i+1])
+        f = interp1d(times[i-1:i+1], series[:,i-1:i+1], fill_value="extrapolate")
         series_new = f(times_new)
 
         # Store interpolated data in array
