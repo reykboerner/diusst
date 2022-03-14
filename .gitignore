@@ -12,6 +12,7 @@
 *.blg
 *.fdb_latexmk
 *.fls
-/code/__pycache__/
+**/__pycache__/**
 /output_files/
 **/old/**
+/src/
