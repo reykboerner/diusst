@@ -102,3 +102,55 @@ def cfl_interpolation(data,
         print('++++++++++++++++++++++++++++++++++++++++')
 
     return df_final, dt_list, idx_list[:-1]
+
+
+def const_interpolation(data, dt=1,
+    save=None,
+    verbose=True):
+
+    # Extract data from input file
+    times = data['times'].to_numpy(np.float64)
+    sst = data['sst'].to_numpy(np.float64)
+    sst_err = data['sst_err'].to_numpy(np.float64)
+    ftemp = data['ftemp'].to_numpy(np.float64)
+    wind = data['wind'].to_numpy(np.float64)
+    atemp = data['atemp'].to_numpy(np.float64)
+    swrad = data['swrad'].to_numpy(np.float64)
+    humid = data['humid'].to_numpy(np.float64)
+
+    # Initialize arrays to store interpolated data
+    series = np.stack((sst, sst_err, ftemp, wind, atemp, swrad, humid))
+    times_concat = np.zeros(1)
+    series_concat = np.zeros((7,1))
+    dt_list = []
+    idx_list = [0]
+
+    # Interpolate from each data point to the next
+    for i in range(1,len(times)):
+
+        # Interpolate
+        times_new = np.arange(times[i-1], times[i], dt)
+        f = interp1d(times[i-1:i+1], series[:,i-1:i+1], fill_value="extrapolate")
+        series_new = f(times_new)
+
+        # Store interpolated data in array
+        times_concat = np.concatenate((times_concat,times_new))
+        series_concat = np.column_stack((series_concat,series_new))
+        dt_list.append(dt)
+        idx_list.append(len(times_concat)-1)
+
+    # Create interpolated dataset
+    final = np.row_stack((times_concat,series_concat)).transpose()
+    df_final = pd.DataFrame(final[1:,:], columns=['times','sst','sst_err','ftemp','wind','atemp','swrad','humid'])
+
+    # Option to save as CSV
+    if save is not None:
+        df_final.to_csv(save+'_data.csv')
+
+    # Verbose output
+    if verbose:
+        print('+++ Constant time-step interpolation +++')
+        print('Interpolated dataset has '+str(len(df_final))+' time steps with length '+str(round(np.mean(dt_list),3))+' s.')
+        print('++++++++++++++++++++++++++++++++++++++++')
+
+    return df_final, dt_list, idx_list[:-1]
