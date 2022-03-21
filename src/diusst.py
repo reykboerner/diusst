@@ -1,4 +1,4 @@
-__author__ = 'Reyk Boerner'
+dz__author__ = 'Reyk Boerner'
 
 import numpy as np
 import pandas as pd
@@ -331,7 +331,7 @@ class Diusst:
 
         # Generate stretched mesh
         z = Diusst.get_mesh(self)[0]
-        dz0 = (z[1:]-z[:-1])[:-1]
+        dz = (z[1:]-z[:-1])[:-1]
 
         # Extract data
         times = data['times'].to_numpy(np.float64)
@@ -358,13 +358,13 @@ class Diusst:
 
             # Calculate CFL/dt at all grid points
             if self.diffu_profile == 'CONST' or self.diffu_profile == 'S-EXP' or self.diffu_profile == 'S-LIN':
-                c_array = 2 * (self.k_mol + self.kappa*u**2) / self.dz0**2
+                c_array = 2 * (self.k_mol + self.kappa*u**2) / dz**2
 
             elif self.diffu_profile == 'LIN':
-                c_array = 2 * (self.k_mol + self.kappa*u**2 * (1 + self.sigma*(np.abs(z[1:-1]/self.z_f)-1))) / self.dz0**2
+                c_array = 2 * (self.k_mol + self.kappa*u**2 * (1 + self.sigma*(np.abs(z[1:-1]/self.z_f)-1))) / dz**2
 
             elif self.diffu_profile == 'EXP':
-                c_array = 2 * (self.k_mol + self.kappa*u**2 * (1-self.sigma*np.exp(z[1:-1]/self.lambd))/(1-self.sigma*np.exp(-self.z_f/self.lambd)) ) / self.dz0**2
+                c_array = 2 * (self.k_mol + self.kappa*u**2 * (1-self.sigma*np.exp(z[1:-1]/self.lambd))/(1-self.sigma*np.exp(-self.z_f/self.lambd)) ) / dz**2
 
             else:
                 raise AttributeError("diffu_profile not specified!")
