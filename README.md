@@ -4,8 +4,7 @@ A simple model of diurnal sea surface warming in the tropical ocean, designed as
 > #### Quick links
 > * [Thesis](https://nbi.ku.dk/english/theses/masters-theses/reyk-borner/boerner_MSc_thesis.pdf) (detailed description of the model in chapter 5, results in chapter 6)
 > * [Video presentation](https://youtu.be/KdOWF_fzRLE) (15-minute recorded talk)
-> * [Presentation slides](https://github.com/reykboerner/diusst/blob/master/docs/boerner_MSc_defense.pdf) (from the thesis defense)
-> * [Starter tutorial](https://github.com/reykboerner/diusst/blob/master/tutorials/run_diusst.ipynb) (introductory example of how to run the model in Python)
+> * [Starter tutorial](https://github.com/reykboerner/diusst/blob/master/docs/run_diusst.ipynb) (introductory example of how to run the model in Python)
 >
 > Contact: [reyk.boerner@reading.ac.uk](mailto:reyk.boerner@reading.ac.uk)
 
@@ -30,6 +29,7 @@ The code is written in Python3 and requires the following Python modules:
 * numpy
 * scipy
 * pandas
+* tqdm
 
 Additionally, for Bayesian inference we require
 * emcee
@@ -38,9 +38,9 @@ Additionally, for Bayesian inference we require
 Use `pip install <modulename>` to install the packages.
 
 ### Running simulations
-The [Jupyter notebook tutorial](https://github.com/reykboerner/diusst/blob/master/tutorials/run_diusst.ipynb) provides an example of how to run the model and generate a plot like the one above. It uses a dataset from the MOCE-5 cruise, which is included in this repository.
+The [Jupyter notebook tutorial](https://github.com/reykboerner/diusst/blob/master/docs/run_diusst.ipynb) provides an example of how to run the model and generate a plot like the one above. It uses a dataset from the MOCE-5 cruise, which is included in this repository.
 
-As shown in the tutorial, running the DiuSST model corresponds to calling the `diusst` function. Model parameters and settings are adjusted through the arguments of this function. For a complete list of required and optional arguments, including their description and default values, click [here](#documentation).
+As shown in the tutorial, running the DiuSST model corresponds to calling the `simulate` function of the `Diusst` class. Model parameters and settings are adjusted through the attributes of the `Diusst` class. For a complete list of required and optional arguments, including their description and default values, click [here](#documentation).
 
 ### Bayesian inference
 
@@ -63,19 +63,7 @@ After successful completion, the script stores the output in several files in th
 ### The model
 A detailed description of the model is provided in chapter 5 of the [thesis](https://nbi.ku.dk/english/theses/masters-theses/reyk-borner/boerner_MSc_thesis.pdf).
 
-In the Python script `diusst_model.py`, the model is written as a Python function `diusst` taking the following positional and keyword arguments:
-
-#### *Positional arguments*
-#### Input data: Timeseries of atmospheric variables
-| Label         | Description     | Units |
-|--------------|-----------|------------|
-| `time_data` | Time values of atmospheric data timeseries (1D array)| s (since midnight local time) |
-| `wind_data` | Wind speed data (1D array)| m/s |
-| `swave_data` | Shortwave irradiance data (1D array)| W/m² |
-| `airtemp_data` | Air temperature data (1D array)| K |
-| `humid_data` | Air specific humidity data (1D array)| kg/kg |
-
-#### *Keyword arguments*
+In the Python script `src/diusst.py`, the model is written as a Python class with the following attributes:
 
 #### Model parameters
 | Label         | Parameter     | Units |
