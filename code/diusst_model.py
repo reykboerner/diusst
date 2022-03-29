@@ -119,8 +119,8 @@ def diusst(
 
         # Compute surface fluxes
         Rlw = sb_const * (opac*(airtemp_data[n-1])**4 - (T[n-1,1])**4)
-        Qs  = rho_a * cp_a * C_s * max(0.5, wind_data[n-1]) * (airtemp_data[n-1] - T[n-1,1])
-        Ql  = rho_a * L_evap * C_l * max(0.5, wind_data[n-1]) * (humid_data[n-1] - s_sat(T[n-1,1], rho_a, gas_const))
+        Qs  = rho_a * cp_a * C_s * wind_data[n-1] * (airtemp_data[n-1] - T[n-1,1])
+        Ql  = rho_a * L_evap * C_l * wind_data[n-1] * (humid_data[n-1] - s_sat(T[n-1,1], rho_a, gas_const))
 
         # Total heat flux
         Q = R_sw[n-1]
