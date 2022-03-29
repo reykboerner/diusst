@@ -279,9 +279,12 @@ class Diusst:
             Q[0] += (Rlw + Qs + Ql)
 
             # Euler step
-            dT = diffu[n-1] * _lapl_central(T[n-1], dv1, dv2) + ddiffu[n-1] * _grad_central(T[n-1], dv1) - mix * (T[n-1] - self.T_f) + _grad_bckward(Q, dv1) / (self.rho_w * self.cp_w)
-
-            T[n] = T[n-1] + dt[n-1] * dT
+            T[n] = T[n-1] + dt[n-1] * (
+                diffu[n-1] * _lapl_central(T[n-1], dv1, dv2)
+                + ddiffu[n-1] * _grad_central(T[n-1], dv1)
+                - mix * (T[n-1] - self.T_f)
+                + _grad_bckward(Q, dv1) / (self.rho_w * self.cp_w)
+                )
 
             # Write heat fluxes
             if output == 'detailed':
