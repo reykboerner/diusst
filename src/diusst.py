@@ -6,7 +6,7 @@ from scipy.optimize import fsolve
 from scipy.interpolate import interp1d
 from tqdm import tqdm
 
-from utils import _grad_bckward, _grad_central, _lapl_central
+from utils import _grad_bckward, _grad_forward, _grad_central, _lapl_central
 
 class Diusst:
     """
@@ -150,6 +150,22 @@ class Diusst:
     ### Main function for running DiuSST ##########################################################
     ###############################################################################################
 
+    @property
+    def mix(self):
+        if self.ngrid is None:
+            self.ngrid = int(self.z_f/self.dz0)
+
+        N_z = self.ngrid + 2
+        z, stretch = Diusst.get_mesh(self)
+
+        # Initialize mixing term
+        mix = np.zeros(N_z)
+        mix[1:-1] = self.mu / np.abs(z[1:-1]-z[-1]) * np.abs(z[2:]-z[1:-1])
+
+        return mix
+
+
+
     def simulate(self, data, init=None, output=None):
         """
         Run the DiuSST model under given atmospheric forcing.
@@ -195,7 +211,7 @@ class Diusst:
 
         # Define vertical grid
         if self.ngrid is None:
-            self.ngrid = int(z_f/dz0)
+            self.ngrid = int(self.z_f/self.dz0)
 
         N_z = self.ngrid + 2
         z, stretch = Diusst.get_mesh(self)
@@ -260,12 +276,12 @@ class Diusst:
 
             # Diffusion term (state-dependent diffusivity profiles)
             if self.diffu_profile == 'S-LIN':
-                S = min( max((T[n-1,1]-T[n-1,self.zidx_ref]), 0) , 1)
+                S = min( max((T[n-1,1]-T[n-1,zidx_ref]), 0) , 1)
                 diffu[n-1] = self.k_mol + wind_factor[n-1] * self.kappa * (1 + S*self.sigma*(np.abs(z[i]/self.z_f)-1))
                 ddiffu[n-1] = - wind_factor[n-1] * self.kappa * S * self.sigma / self.z_f
 
             elif self.diffu_profile == 'S-EXP':
-                S = min( max((T[n-1,1]-T[n-1,self.zidx_ref]), 0) , 1)
+                S = min( max((T[n-1,1]-T[n-1,zidx_ref]), 0) , 1)
                 diffu[n-1] = self.k_mol + wind_factor[n-1] * self.kappa * (1-S*self.sigma*np.exp(z/self.lambd))/(1-S*self.sigma*np.exp(-self.z_f/self.lambd))
                 ddiffu[n-1] = - wind_factor[n-1] * self.kappa * S*self.sigma/self.lambd * np.exp(z/self.lambd) /(1-S*self.sigma*np.exp(-self.z_f/self.lambd))
 
@@ -361,13 +377,13 @@ class Diusst:
 
             # Calculate CFL/dt at all grid points
             if self.diffu_profile == 'CONST' or self.diffu_profile == 'S-EXP' or self.diffu_profile == 'S-LIN':
-                c_array = 2 * (self.k_mol + self.kappa*u**2) / dz**2
+                c_array = 2 * (self.k_mol + self.kappa*u**self.wind_exp) / dz**2
 
             elif self.diffu_profile == 'LIN':
-                c_array = 2 * (self.k_mol + self.kappa*u**2 * (1 + self.sigma*(np.abs(z[1:-1]/self.z_f)-1))) / dz**2
+                c_array = 2 * (self.k_mol + self.kappa*u**self.wind_exp * (1 + self.sigma*(np.abs(z[1:-1]/self.z_f)-1))) / dz**2
 
             elif self.diffu_profile == 'EXP':
-                c_array = 2 * (self.k_mol + self.kappa*u**2 * (1-self.sigma*np.exp(z[1:-1]/self.lambd))/(1-self.sigma*np.exp(-self.z_f/self.lambd)) ) / dz**2
+                c_array = 2 * (self.k_mol + self.kappa*u**self.wind_exp * (1-self.sigma*np.exp(z[1:-1]/self.lambd))/(1-self.sigma*np.exp(-self.z_f/self.lambd)) ) / dz**2
 
             else:
                 raise AttributeError("diffu_profile not specified!")
