@@ -39,7 +39,7 @@ class Diusst:
 
     """
 
-    def __init__(self, diffu_profile='CONST',
+    def __init__(self, diffu_profile='CONST', surflux='dummyplus', reflect=True,
         T_f = 300,
         kappa = 1e-4,
         mu = 1,
@@ -118,6 +118,8 @@ class Diusst:
         """
 
         self.diffu_profile = diffu_profile
+        self.surflux = surflux
+        self.reflect = reflect
         self.T_f = T_f
         self.kappa = kappa
         self.mu = mu
@@ -248,7 +250,7 @@ class Diusst:
         # Shortwave heat flux penetrating the sea surface
         R_sw = np.zeros((N_t,N_z))
         for i in range(N_z):
-            R_sw[:,i] = swrad_data * np.exp(self.alpha / np.cos( Diusst._refract_angle(self, solar_angle) ) * z[i])
+            R_sw[:,i] = Diusst._transmitted(self, swrad_data, solar_angle) * np.exp(self.alpha / np.cos( Diusst._refract_angle(self, solar_angle) ) * z[i])
 
         # Wind dependence of diffusion term
         wind_factor = np.minimum(wind_data, self.wind_max) ** self.wind_exp
@@ -292,14 +294,23 @@ class Diusst:
 
             # Total heat flux
             Q = R_sw[n-1]
-            Q[0] += (Rlw + Qs + Ql)
+
+            if self.surflux == 'dummyplus':
+                function = _grad_bckward
+                Q[0] += (Rlw + Qs + Ql)
+            elif self.surflux == 'dummyreflect':
+                function = _grad_bckward
+                Q[0] = swrad_data[n-1] + Rlw + Qs + Ql
+            elif self.surflux == 'forward':
+                function = _grad_forward
+                Q[1] += Rlw + Qs + Ql
 
             # Euler step
             T[n] = T[n-1] + dt[n-1] * (
                 diffu[n-1] * _lapl_central(T[n-1], dv1, dv2)
                 + ddiffu[n-1] * _grad_central(T[n-1], dv1)
                 - mix * (T[n-1] - self.T_f)
-                + _grad_bckward(Q, dv1) / (self.rho_w * self.cp_w)
+                + function(Q, dv1) / (self.rho_w * self.cp_w)
                 )
 
             # Write heat fluxes
@@ -474,6 +485,21 @@ class Diusst:
         theta = np.where((theta > (np.pi/2)) & (theta < (3*np.pi/2)), np.pi/2, theta)
 
         return np.abs(np.arcsin(self.n_a / self.n_w * np.sin(theta)))
+
+    def _transmitted(self, irradiance, angle):
+
+        # Set angle to pi/2 when sun is below horizon
+        theta = angle % (2*np.pi)
+        theta = np.where((theta > (np.pi/2)) & (theta < (3*np.pi/2)), np.pi/2, theta)
+
+        if self.reflect:
+            sqrt = np.sqrt(1-(self.n_a/self.n_w*np.sin(theta))**2)
+            perp = ((self.n_a*np.cos(theta) - self.n_w*sqrt)/(self.n_a*np.cos(theta) + self.n_w*sqrt))**2
+            para = ((self.n_a*sqrt - self.n_w*np.cos(theta))/(self.n_a*sqrt + self.n_w*np.cos(theta)))**2
+            reflected = (perp + para)/2
+            return irradiance*(1-reflected)
+        else:
+            return irradiance
 
     def _dndz(self):
         """
