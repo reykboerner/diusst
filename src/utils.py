@@ -56,3 +56,9 @@ def _grad_bckward(array, deriv1):
     grad = np.zeros(len(array))
     grad[1:-1] = (array[1:-1] - array[:-2]) * deriv1[1:-1]
     return grad
+
+
+def _grad_forward(array, deriv1):
+    grad = np.zeros(len(array))
+    grad[1:-1] = (array[2:] - array[1:-1]) * deriv1[1:-1]
+    return grad
