@@ -1,4 +1,4 @@
-dz__author__ = 'Reyk Boerner'
+__author__ = 'Reyk Boerner'
 
 import numpy as np
 import pandas as pd
@@ -20,6 +20,9 @@ class Diusst:
         Functional form of the vertical diffusivity profile.
         Options are 'CONST', 'LIN', 'EXP', 'S-LIN', 'S-EXP'.
 
+    reflect: bool
+        Switch on/off reflection of downward shortwave radiation at the sea surface.
+
     Methods
     ----------
 
@@ -39,21 +42,20 @@ class Diusst:
 
     """
 
-    def __init__(self, diffu_profile='CONST', surflux='dummyplus', reflect=True,
+    def __init__(self, diffu_profile='LIN', reflect=True,
         T_f = 300,
-        kappa = 1e-4,
-        mu = 1,
-        alpha = 1,
+        kappa = 1.42e-4,
+        mu = 2.93e-3,
+        alpha = 4.01,
         lambd = 3,
         sigma = 0.8,
         z_ref = 1,
         wind_max = 10,
         wind_exp = 2,
-        opac = 1,
         CFL = 0.95,
         z_f = 10,
         dz0 = 0.10,
-        ngrid = None,
+        ngrid = 40,
         k_mol = 1e-7,
         cp_w = 3850,
         cp_a = 1005,
@@ -66,12 +68,10 @@ class Diusst:
         L_evap = 2.5e6,
         sb_const = 5.67e-8,
         gas_const = 461.51):
+
         """
         Options
         ----------
-        diffu_profile: str
-            Functional form of the vertical diffusivity profile.
-            Options are 'CONST', 'LIN', 'EXP', 'S-LIN', 'S-EXP'.
 
         CFL: float
             Target CFL number when determining the variable time step during data interpolation.
@@ -81,9 +81,6 @@ class Diusst:
 
         wind_exp: int
             Exponent in the relation between turbulent diffusivity and wind speed. Standard value is 2.
-
-        opac: float
-            Opacity of the vertically integrated atmosphere to longwave radiation. Default = 1.
 
         Parameters
         ----------
@@ -129,7 +126,6 @@ class Diusst:
         self.z_ref = z_ref
         self.wind_max = wind_max
         self.wind_exp = wind_exp
-        self.opac = opac
         self.CFL = CFL
         self.z_f = z_f
         self.dz0 = dz0
@@ -147,28 +143,11 @@ class Diusst:
         self.sb_const = sb_const
         self.gas_const = gas_const
 
-
     ###############################################################################################
     ### Main function for running DiuSST ##########################################################
     ###############################################################################################
 
-    @property
-    def mix(self):
-        if self.ngrid is None:
-            self.ngrid = int(self.z_f/self.dz0)
-
-        N_z = self.ngrid + 2
-        z, stretch = Diusst.get_mesh(self)
-
-        # Initialize mixing term
-        mix = np.zeros(N_z)
-        mix[1:-1] = self.mu / np.abs(z[1:-1]-z[-1]) * np.abs(z[2:]-z[1:-1])
-
-        return mix
-
-
-
-    def simulate(self, data, init=None, output=None):
+    def simulate(self, data, init=None, output=None, progress=True):
         """
         Run the DiuSST model under given atmospheric forcing.
         Numerical integration based on explicit Euler scheme
@@ -188,6 +167,9 @@ class Diusst:
 
         output: str
             What data to return.
+
+        progress: bool
+            Switch for tqdm progress bar.
 
         Returns
         ----------
@@ -274,7 +256,12 @@ class Diusst:
                 ddiffu[:,i] = - wind_factor * self.kappa / self.lambd * self.sigma * np.exp(z[i]/self.lambd) /(1 - self.sigma*np.exp(-self.z_f/self.lambd))
 
         ### Time integration ###
-        for n in tqdm(range(1, N_t)):
+        if progress:
+            itsteps = tqdm(range(1, N_t))
+        else:
+            itsteps = range(1, N_t)
+
+        for n in itsteps:
 
             # Diffusion term (state-dependent diffusivity profiles)
             if self.diffu_profile == 'S-LIN':
@@ -288,29 +275,20 @@ class Diusst:
                 ddiffu[n-1] = - wind_factor[n-1] * self.kappa * S*self.sigma/self.lambd * np.exp(z/self.lambd) /(1-S*self.sigma*np.exp(-self.z_f/self.lambd))
 
             # Compute surface fluxes
-            Rlw = self.sb_const * (self.opac*(airtemp_data[n-1])**4 - (T[n-1,1])**4)
+            Rlw = self.sb_const * (airtemp_data[n-1]**4 - T[n-1,1]**4)
             Qs  = self.rho_a * self.cp_a * self.C_s * wind_data[n-1] * (airtemp_data[n-1] - T[n-1,1])
             Ql  = self.rho_a * self.L_evap * self.C_l * wind_data[n-1] * (humid_data[n-1] - Diusst.get_sat_humid(self, T[n-1,1]))
 
             # Total heat flux
             Q = R_sw[n-1]
-
-            if self.surflux == 'dummyplus':
-                function = _grad_bckward
-                Q[0] += (Rlw + Qs + Ql)
-            elif self.surflux == 'dummyreflect':
-                function = _grad_bckward
-                Q[0] = swrad_data[n-1] + Rlw + Qs + Ql
-            elif self.surflux == 'forward':
-                function = _grad_forward
-                Q[1] += Rlw + Qs + Ql
+            Q[1] += Rlw + Qs + Ql
 
             # Euler step
             T[n] = T[n-1] + dt[n-1] * (
                 diffu[n-1] * _lapl_central(T[n-1], dv1, dv2)
                 + ddiffu[n-1] * _grad_central(T[n-1], dv1)
                 - mix * (T[n-1] - self.T_f)
-                + function(Q, dv1) / (self.rho_w * self.cp_w)
+                + _grad_forward(Q, dv1) / (self.rho_w * self.cp_w)
                 )
 
             # Write heat fluxes
@@ -439,13 +417,13 @@ class Diusst:
     def get_mesh(self):
         """
         Generates an array of depth coordinates for the stretched vertical grid,
-        given dz0, ngrid, and z_f. (See eq. (5.21) of thesis.)
+        given dz0, ngrid, and z_f.
         """
 
         def _stretch_factor(epsilon):
             """
             Solves for the stretch factor of the vertical grid,
-            given dz0, ngrid, and z_f. (See eq. (5.24) of thesis.)
+            given dz0, ngrid, and z_f.
             """
             return 1 - self.dz0 / self.z_f * (1 - epsilon**self.ngrid) - epsilon
 
@@ -461,7 +439,6 @@ class Diusst:
     def get_sat_humid(self, T):
         """
         Calculates saturation specific humidity for given air temperature T, in units kg/kg.
-        (See eqs. (5.6) and (5.7) of thesis.)
         """
         return 611.2 * np.exp(17.67 * (T - 273.15) / (T - 29.65) ) / (self.rho_a * self.gas_const * T)
 
@@ -473,9 +450,8 @@ class Diusst:
     def _refract_angle(self, angle):
         """
         Calculates the refraction of a light ray penetrating the air-sea interface, based on Snell's refraction law.
-        (See eq. (5.19) of thesis.)
 
-        Input:  incident angle (rad, with respect to surface normal)
+        Input:  incident solar angle (rad, with respect to surface normal)
         Output: refracted angle below sea surface (rad, with respect to surface normal)
 
         """
@@ -487,11 +463,19 @@ class Diusst:
         return np.abs(np.arcsin(self.n_a / self.n_w * np.sin(theta)))
 
     def _transmitted(self, irradiance, angle):
+        """
+        Removes the fraction of downward shortwave radiation reflected at the sea surface.
+
+        Input:
+            irradiance (array): incident downward shortwave irradiance above sea surface
+            angle (float): incident solar angle (rad, with respect to surface normal)
+        """
 
         # Set angle to pi/2 when sun is below horizon
         theta = angle % (2*np.pi)
         theta = np.where((theta > (np.pi/2)) & (theta < (3*np.pi/2)), np.pi/2, theta)
 
+        # Compute reflected fraction
         if self.reflect:
             sqrt = np.sqrt(1-(self.n_a/self.n_w*np.sin(theta))**2)
             perp = ((self.n_a*np.cos(theta) - self.n_w*sqrt)/(self.n_a*np.cos(theta) + self.n_w*sqrt))**2

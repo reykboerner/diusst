@@ -2,6 +2,7 @@
 A simple model of diurnal sea surface warming in the tropical ocean, designed as an interactive boundary condition for idealized atmospheric simulations.
 
 > #### Quick links
+> * [Paper](https://arxiv.org/abs/2205.07933) (arXiv preprint)
 > * [Thesis](https://nbi.ku.dk/english/theses/masters-theses/reyk-borner/boerner_MSc_thesis.pdf) (detailed description of the model in chapter 5, results in chapter 6)
 > * [Video presentation](https://youtu.be/KdOWF_fzRLE) (15-minute recorded talk)
 > * [Starter tutorial](https://github.com/reykboerner/diusst/blob/master/docs/run_diusst.ipynb) (introductory example of how to run the model in Python)
@@ -44,6 +45,8 @@ As shown in the tutorial, running the DiuSST model corresponds to calling the `s
 
 ### Bayesian inference
 
+> currently reworking this section
+
 #### Modify settings
 Settings of the MCMC run, parameter limits, the dataset to use etc. can be specified in the `run_bayesian.py` file found in `code`. The section where to edit these settings is labeled `# RUN SETTINGS` in the script.
 
@@ -61,7 +64,7 @@ After successful completion, the script stores the output in several files in th
 ## Documentation
 
 ### The model
-A detailed description of the model is provided in chapter 5 of the [thesis](https://nbi.ku.dk/english/theses/masters-theses/reyk-borner/boerner_MSc_thesis.pdf).
+A detailed description of the model is provided in the [paper](https://arxiv.org/abs/2205.07933). The discretized model equation is given in eq. (A1).
 
 In the Python script `src/diusst.py`, the model is written as a Python class with the following attributes:
 

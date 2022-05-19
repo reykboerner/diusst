@@ -17,8 +17,8 @@ class Slab:
         C_s = 1.3e-3,                   # turbulent exchange coefficient for sensible heat
         C_l = 1.5e-3,                   # turbulent exchange coefficient for latent heat
         L_evap = 2.5e6,                 # latent heat of evaporization (J/kg) Source: Klose p.151
-        cp_w = 3850,                     # specific heat of sea water at const pressure (in J/K/kg)
-        cp_a = 1005,                   # specific heat of air at const pressure (in J/K/kg)
+        cp_w = 3850,                    # specific heat of sea water at const pressure (in J/K/kg)
+        cp_a = 1005,                    # specific heat of air at const pressure (in J/K/kg)
         sb_const = 5.67e-8,             # Stefan Boltzmann constant (in W/m^2/K^4)
         gas_const = 461.51,
         opac=1,
@@ -44,7 +44,7 @@ class Slab:
         self.wind_max = wind_max
 
 
-    def simulate(self, data):
+    def simulate(self, data, output='T'):
 
         # Extract data
         time_data = data['times'].to_numpy(np.float64)
@@ -57,17 +57,31 @@ class Slab:
         dt = time_data[1:] - time_data[:-1]
 
         corr = 0
+        Q_s, Q_l, R_lw = [], [], []
 
         for n in range(1,len(time_data)):
 
             corr += (T[n-1] - self.T_f) * dt[n-1]
 
-            R_lw = self.sb_const * (self.opac*(airtemp_data[n-1])**4 - (T[n-1])**4)
-            Q_s  = self.rho_a * self.cp_a * self.C_s * max(0.5, wind_data[n-1]) * (airtemp_data[n-1] - T[n-1])
-            Q_l  = self.rho_a * self.L_evap * self.C_l * max(0.5, wind_data[n-1]) * (humid_data[n-1] - s_sat(T[n-1], self.rho_a, self.gas_const))
+            Rlw = self.sb_const * (self.opac*(airtemp_data[n-1])**4 - (T[n-1])**4)
+            Qs  = self.rho_a * self.cp_a * self.C_s * wind_data[n-1] * (airtemp_data[n-1] - T[n-1])
+            Ql  = self.rho_a * self.L_evap * self.C_l * wind_data[n-1] * (humid_data[n-1] - Slab.get_sat_humid(self, T[n-1]))
 
-            dT = (swrad_data[n-1] + R_lw + Q_s + Q_l - self.Q_sink) / (self.rho_w * self.cp_w * self.d) - self.xi_1 * (T[n-1]-self.T_f) - self.xi_2 * corr
+            dT = (swrad_data[n-1] + Rlw + Qs + Ql - self.Q_sink) / (self.rho_w * self.cp_w * self.d) - self.xi_1 * (T[n-1]-self.T_f) - self.xi_2 * corr
 
             T[n] = T[n-1] + dt[n-1]*dT
 
-        return T
+            if output=='detailed':
+                R_lw.append(Rlw); Q_s.append(Qs); Q_l.append(Ql)
+
+        if output=='T':
+            return T
+        elif output=='detailed':
+            return T, [np.array(Q_s), np.array(Q_l), np.array(R_lw)]
+
+    def get_sat_humid(self, T):
+        """
+        Calculates saturation specific humidity for given air temperature T, in units kg/kg.
+        (See eqs. (5.6) and (5.7) of thesis.)
+        """
+        return 611.2 * np.exp(17.67 * (T - 273.15) / (T - 29.65) ) / (self.rho_a * self.gas_const * T)
