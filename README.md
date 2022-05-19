@@ -13,7 +13,7 @@ A simple model of diurnal sea surface warming in the tropical ocean, designed as
 <p align = "center"><img src="https://github.com/reykboerner/diusst/blob/master/docs/header-image.png" alt="header-image" width="90%"/></p>
 
 ## About
-This repository contains code for running and analyzing the DiuSST model developed in the context of my master project. Have a look at the [summary](https://github.com/reykboerner/diusst/blob/master/docs/summary.md) or [thesis](https://nbi.ku.dk/english/theses/masters-theses/reyk-borner/boerner_MSc_thesis.pdf) to learn more. A paper about this work is in preparation and will be linked here when available.
+This repository contains code for running and analyzing the DiuSST model developed in the context of my master project. Have a look at the [summary](https://github.com/reykboerner/diusst/blob/master/docs/summary.md), [paper](https://arxiv.org/abs/2205.07933) or [thesis](https://nbi.ku.dk/english/theses/masters-theses/reyk-borner/boerner_MSc_thesis.pdf) to learn more.
 
 Below, you will find information on how to use the code. (This repository is currently being expanded.)
 
