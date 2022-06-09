@@ -115,7 +115,6 @@ class Diusst:
         """
 
         self.diffu_profile = diffu_profile
-        self.surflux = surflux
         self.reflect = reflect
         self.T_f = T_f
         self.kappa = kappa
