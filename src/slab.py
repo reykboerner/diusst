@@ -1,5 +1,9 @@
+__author__ = 'Reyk Boerner'
+
 import numpy as np
-from diusst_funcs import *
+import pandas as pd
+from scipy.interpolate import interp1d
+from tqdm import tqdm
 
 class Slab:
     """docstring for Slab."""
@@ -22,7 +26,7 @@ class Slab:
         sb_const = 5.67e-8,             # Stefan Boltzmann constant (in W/m^2/K^4)
         gas_const = 461.51,
         opac=1,
-        wind_max = 10,
+        wind_max = 10
     ):
         self.d = d
         self.Q_sink = Q_sink
@@ -44,7 +48,7 @@ class Slab:
         self.wind_max = wind_max
 
 
-    def simulate(self, data, output='T'):
+    def simulate(self, data, output='T', progress=True):
 
         # Extract data
         time_data = data['times'].to_numpy(np.float64)
@@ -59,7 +63,12 @@ class Slab:
         corr = 0
         Q_s, Q_l, R_lw = [], [], []
 
-        for n in range(1,len(time_data)):
+        if progress:
+            itsteps = tqdm(range(1,len(time_data)))
+        else:
+            itsteps = range(1,len(time_data))
+
+        for n in itsteps:
 
             corr += (T[n-1] - self.T_f) * dt[n-1]
 
@@ -85,3 +94,55 @@ class Slab:
         (See eqs. (5.6) and (5.7) of thesis.)
         """
         return 611.2 * np.exp(17.67 * (T - 273.15) / (T - 29.65) ) / (self.rho_a * self.gas_const * T)
+
+    def interpolate(self, data, dt=1, save=None, verbose=True):
+        """
+        Interpolates the input data with constant time step dt.
+        """
+
+        # Extract data from input file
+        times = data['times'].to_numpy(np.float64)
+        sst = data['sst'].to_numpy(np.float64)
+        sst_err = data['sst_err'].to_numpy(np.float64)
+        ftemp = data['ftemp'].to_numpy(np.float64)
+        wind = data['wind'].to_numpy(np.float64)
+        atemp = data['atemp'].to_numpy(np.float64)
+        swrad = data['swrad'].to_numpy(np.float64)
+        humid = data['humid'].to_numpy(np.float64)
+
+        # Initialize arrays to store interpolated data
+        series = np.stack((sst, sst_err, ftemp, wind, atemp, swrad, humid))
+        times_concat = np.zeros(1)
+        series_concat = np.zeros((7,1))
+        dt_list = []
+        idx_list = [0]
+
+        # Interpolate from each data point to the next
+        for i in range(1,len(times)):
+
+            # Interpolate
+            times_new = np.arange(times[i-1], times[i], dt)
+            f = interp1d(times[i-1:i+1], series[:,i-1:i+1], fill_value="extrapolate")
+            series_new = f(times_new)
+
+            # Store interpolated data in array
+            times_concat = np.concatenate((times_concat,times_new))
+            series_concat = np.column_stack((series_concat,series_new))
+            dt_list.append(dt)
+            idx_list.append(len(times_concat)-1)
+
+        # Create interpolated dataset
+        final = np.row_stack((times_concat,series_concat)).transpose()
+        df_final = pd.DataFrame(final[1:,:], columns=['times','sst','sst_err','ftemp','wind','atemp','swrad','humid'])
+
+        # Option to save as CSV
+        if save is not None:
+            df_final.to_csv(save+'_data.csv')
+
+        # Verbose output
+        if verbose:
+            print('+++ Constant time-step interpolation +++')
+            print('Interpolated dataset has '+str(len(df_final))+' time steps with length '+str(round(np.mean(dt_list),3))+' s.')
+            print('++++++++++++++++++++++++++++++++++++++++')
+
+        return df_final, dt_list, idx_list[:-1]
