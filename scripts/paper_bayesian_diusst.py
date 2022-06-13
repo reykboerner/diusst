@@ -79,7 +79,7 @@ param_min = np.array(param_min)
 param_max = np.array(param_max)
 param_start = np.array(param_start)
 
-print('=== Bayesian sampling 3 parameters, Run ID '+run_id+' ===')
+print('=== Bayesian sampling {} parameters, Run ID '.format(len(param_start))+run_id+' ===')
 print('... Start time: {}'.format(now))
 print('... Data loaded from '+data_path+data_filename)
 
@@ -122,20 +122,16 @@ print('... Set humidity to {} g/kg.'.format(humidity))
 def bayesian_likelihood(params):
     kappa, mu, alpha = params
 
-    model1 = Diusst(T_f=ftemp, kappa=kappa, mu=mu, alpha=alpha, sigma=sigma,
-                    wind_max=wind_max, z_f=z_f, dz0=dz, ngrid=ngrid,
-                    CFL=CFL, diffu_profile=diffu_profile, reflect=reflect)
-
-    model2 = Diusst(T_f=ftemp, kappa=kappa, mu=mu, alpha=alpha, sigma=sigma,
+    model = Diusst(T_f=ftemp, kappa=kappa, mu=mu, alpha=alpha, sigma=sigma,
                     wind_max=wind_max, z_f=z_f, dz0=dz, ngrid=ngrid,
                     CFL=CFL, diffu_profile=diffu_profile, reflect=reflect)
 
     # interpolate to meet CFL condition
-    data1, dtlist1, idx1 = model1.interpolate(data_orig1, verbose=False)
-    data2, dtlist2, idx2 = model2.interpolate(data_orig2, verbose=False)
+    data1, dtlist1, idx1 = model.interpolate(data_orig1, verbose=False)
+    data2, dtlist2, idx2 = model.interpolate(data_orig2, verbose=False)
 
-    simu1 = model1.simulate(data1, progress=False)[0]
-    simu2 = model2.simulate(data2, progress=False)[0]
+    simu1 = model.simulate(data1, progress=False)[0]
+    simu2 = model.simulate(data2, progress=False)[0]
 
     sst_model1 = simu1[:,0]-simu1[:,ref_level]
     sst_model2 = simu2[:,0]-simu2[:,ref_level]
