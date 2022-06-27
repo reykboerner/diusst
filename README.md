@@ -1,11 +1,11 @@
 # DiuSST - Diurnal sea surface temperature model
-A simple model of diurnal sea surface warming in the tropical ocean, designed as an interactive boundary condition for idealized atmospheric simulations.
+A simple 1D model of diurnal sea surface temperature variability, designed as an interactive boundary condition for idealized atmospheric simulations.
 
 > #### Quick links
 > * [Paper](https://arxiv.org/abs/2205.07933) (arXiv preprint)
-> * [Thesis](https://nbi.ku.dk/english/theses/masters-theses/reyk-borner/boerner_MSc_thesis.pdf) (detailed description of the model in chapter 5, results in chapter 6)
+> * [Starter tutorial](https://github.com/reykboerner/diusst/blob/master/docs/run_diusst.ipynb) (introductory example of running the code)
 > * [Video presentation](https://youtu.be/KdOWF_fzRLE) (15-minute recorded talk)
-> * [Starter tutorial](https://github.com/reykboerner/diusst/blob/master/docs/run_diusst.ipynb) (introductory example of how to run the model in Python)
+>
 >
 > Contact: [reyk.boerner@reading.ac.uk](mailto:reyk.boerner@reading.ac.uk)
 
@@ -13,15 +13,16 @@ A simple model of diurnal sea surface warming in the tropical ocean, designed as
 <p align = "center"><img src="https://github.com/reykboerner/diusst/blob/master/docs/header-image.png" alt="header-image" width="90%"/></p>
 
 ## About
-This repository contains code for running and analyzing the DiuSST model developed in the context of my master project. Have a look at the [summary](https://github.com/reykboerner/diusst/blob/master/docs/summary.md), [paper](https://arxiv.org/abs/2205.07933) or [thesis](https://nbi.ku.dk/english/theses/masters-theses/reyk-borner/boerner_MSc_thesis.pdf) to learn more.
+This repository contains code for running and calibrating the *diuSST* model developed in the context of my master project at University of Copenhagen. Have a look at the [summary](https://github.com/reykboerner/diusst/blob/master/docs/summary.md), [paper](https://arxiv.org/abs/2205.07933) or [thesis](https://nbi.ku.dk/english/theses/masters-theses/reyk-borner/boerner_MSc_thesis.pdf) to learn more.
 
-Below, you will find information on how to use the code. (This repository is currently being expanded.)
+Below, you will find information on how to use the code in this repo.
 
+The main source code is located in the `src` folder. It contains Python implementations of the *diuSST* model (`diusst.py`) as well as a single-layer slab ocean model (`slab.py`) for comparison.
+A Fortran implementation is in progress.
+
+To exemplify how the model performs when forced with atmospheric data, the `input_data` folder contains an observational dataset from the MOCE-5 cruise in the Eastern Pacific. Furthermore, the `scripts` folder features code to calibrate the model parameters from data using Bayesian inference and MCMC sampling.
 
 ## Getting started
-The code essentially serves two purposes:
-* run simulations with the DiuSST model to estimate the response of near-surface sea temperature to atmospheric forcing
-* perform Bayesian inference to estimate model parameters given a dataset
 
 #### Prerequisites
 Clone the repo to your local hard drive using `git clone https://github.com/reykboerner/diusst.git`.
@@ -38,27 +39,27 @@ Additionally, for Bayesian inference we require
 
 Use `pip install <modulename>` to install the packages.
 
-### Running simulations
-The [Jupyter notebook tutorial](https://github.com/reykboerner/diusst/blob/master/docs/run_diusst.ipynb) provides an example of how to run the model and generate a plot like the one above. It uses a dataset from the MOCE-5 cruise, which is included in this repository.
+### Running simulations with diuSST
 
-As shown in the tutorial, running the DiuSST model corresponds to calling the `simulate` function of the `Diusst` class. Model parameters and settings are adjusted through the attributes of the `Diusst` class. For a complete list of required and optional arguments, including their description and default values, click [here](#documentation).
+The *diuSST* model is written as a Python class `Diusst`. The general procedure for running a simulation is
+```
+# create model instance with settings specified by args
+model = DiuSST()
+
+# interpolate atmospheric data
+data = model.interpolate(dataset)
+
+# run the model
+simulation = model.simulate(data)
+```
+
+Model settings are specified through the `Diusst` class attributes. The interpolation step is required since the original forcing dataset may not have a sufficiently high temporal resolution for numerical stability.
+
+Check out the [Jupyter notebook tutorial](https://github.com/reykboerner/diusst/blob/master/docs/run_diusst.ipynb) to learn how to run the code in practice and create a plot like the one above.
 
 ### Bayesian inference
 
-> currently reworking this section
-
-#### Modify settings
-Settings of the MCMC run, parameter limits, the dataset to use etc. can be specified in the `run_bayesian.py` file found in `code`. The section where to edit these settings is labeled `# RUN SETTINGS` in the script.
-
-#### Run
-The script `run_bayesian.py` will read the specified data from the `data` folder and load `interpolation.py` to interpolate this data in time (ensuring that the CFL number meets the stability condition of the numerical model simulation).
-To run the model, the script will load required functions from the `diusst_model.py` and `diusst_funcs.py` files.
-
-Once you have checked the run settings, execute `python3 run_bayesian.py` to run the script.
-
-#### Post-processing
-While running, the script continuously writes the walker positions and log probabilities of the MCMC run into an `.h5` file labeled by a timestamp and run ID. This file can be used to recover output in case the run does not finish successfully.
-After successful completion, the script stores the output in several files in the folder `output`.
+> currently reworking this section (as of June 27, 2022)
 
 
 ## Documentation
@@ -75,27 +76,27 @@ In the Python script `src/diusst.py`, the model is written as a Python class wit
 | `kappa` | Eddy diffusivity $\kappa_0$ (float, $\kappa >0$) | m²/s |
 | `mu` | Mixing coefficient $\mu$ (float, $\mu>0$) | m/s |
 | `alpha` | Attenuation coefficient $\alpha$ (float, $\alpha>0$) | 1/m |
-| `lambd` | Trapping depth $\lambda$, used in EXP and STAB models (float, $\lambda>0$) | m |
 | `sigma` | Surface suppressivity $\sigma$, used in EXP and STAB models (float, $0 \leq \sigma \leq 1$) |  |
+| `lambd` | Trapping depth $\lambda$, used in EXP and STAB models (float, $\lambda>0$) | m |
 | `z_ref` | Reference depth $z_r$, used in STAB model (float) | m |
 
 #### Model options
 | Label         | Description     | Values |
 |--------------|-----------|------------|
-| `diffu_type` | Specifies the vertical diffusivity profile to be used (constant, linear, exponential, or stability-dependent) | `BASE` (default), `LIN`, `EXP`, `STAB` |
-| `init` | Initial condition for water temperature in the model domain. If `None`, then the foundation temperature `T_f` is used (float) | `None` (default) or float (in units K) |
-| `output` | What data to output. Options are `temp` (water temperature array only), `basic` [water temperature, depth, time] or `detailed` [water temperature, depth, time, [sensible, latent, longwave, shortwave heat fluxes]] | `temp`, `basic` (default), `detailed` |
-| `wind_max` | Cut-off wind speed for the turbulent diffusivity. Whenever `wind_data` $>$ `wind_max`, the value of `wind_max` will be used in the diffusivity term. (Surface fluxes remain unaffected by this.) (float)| float (in units m/s, default `10` )|
-| `wind_exp` | The exponent in the wind-dependence of turbulent diffusivity, i.e. $\kappa \sim u^w$, where $w$ is the `wind_exp`. In the thesis the dependence is quadratic, $w=2$. (float) | float (default `2.0`) |
-| `opac` | Opacity of the atmosphere to outgoing longwave radiation $\varepsilon_a$, $0\leq \varepsilon_a \leq 1$ | float (default `1.0`) |
+| `diffu_profile` | Specifies the vertical diffusivity profile to be used (constant, linear, exponential, or stability-dependent) | `CONST` (default), `LIN` (default), `EXP`, `STAB` |
+| `reflect` | Switch on/off reflection of downward shortwave radiation at the sea surface | bool (default `True`) |
+| `CFL`| Target CFL number when determining the variable time step during data interpolation | float `CFL < 1` (default `0.95`) |
+| `wind_max` | Cutoff maximum wind speed in the diffusion term, to limit computational cost (surface fluxes remain unaffected by this) | float (in units m/s, default `10` )|
+| `wind_exp` | The exponent in the wind-dependence of turbulent diffusivity, i.e. $\kappa \sim u^w$, where $w$ is the `wind_exp`. In the thesis the dependence is quadratic, $w=2$ | float (default `2.0`) |
+
 
 
 #### Model domain
 | Label         | Description     | Units |
 |--------------|-----------|------------|
 | `z_f` | Foundation depth (float, default `10`) | m |
-| `dz` | Vertical grid spacing at surface (float, default `0.05`) | m |
-| `ngrid` | Number of vertical grid points*. If `None`, then a uniform grid with spacing `dz` is used (int, default `None`) |  |
+| `dz0` | Vertical grid spacing at surface (float, default `0.1`) | m |
+| `ngrid` | Number of vertical grid points*. If `None`, then a uniform grid with spacing `dz0` is used (int, default `40`) |  |
 
 (*) excluding the boundary grid points, i.e. the foundation point and atmospheric dummy point.
 
