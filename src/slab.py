@@ -25,7 +25,6 @@ class Slab:
         cp_a = 1005,                    # specific heat of air at const pressure (in J/K/kg)
         sb_const = 5.67e-8,             # Stefan Boltzmann constant (in W/m^2/K^4)
         gas_const = 461.51,
-        opac=1,
         wind_max = 10
     ):
         self.d = d
@@ -44,7 +43,6 @@ class Slab:
         self.cp_a = cp_a
         self.sb_const = sb_const
         self.gas_const = gas_const
-        self.opac = opac
         self.wind_max = wind_max
 
 
@@ -72,7 +70,7 @@ class Slab:
 
             corr += (T[n-1] - self.T_f) * dt[n-1]
 
-            Rlw = self.sb_const * (self.opac*(airtemp_data[n-1])**4 - (T[n-1])**4)
+            Rlw = self.sb_const * ((airtemp_data[n-1])**4 - (T[n-1])**4)
             Qs  = self.rho_a * self.cp_a * self.C_s * wind_data[n-1] * (airtemp_data[n-1] - T[n-1])
             Ql  = self.rho_a * self.L_evap * self.C_l * wind_data[n-1] * (humid_data[n-1] - Slab.get_sat_humid(self, T[n-1]))
 
