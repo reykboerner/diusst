@@ -155,11 +155,11 @@ class Diusst:
         ----------
         data: dict or Pandas DataFrame or xarray DataSet
             Atmosheric input data. Must contain time series of the following variables, labeled:
-            'times':    Time since midnight in local time (s)
-            'wind':     Wind speed (m/s)
-            'swrad':    Incident solar irradiance (W/m^2)
-            'atemp':    Air temperature (K)
-            'humid':    Specific humidity (kg/kg)
+            'time':         Time since midnight in local time (s)
+            'wind':         Wind speed (m/s)
+            'swrad':        Incident solar irradiance (W/m^2)
+            'atemp_rel':    Air temperature relative to foundation temperature (K)
+            'humid':        Specific humidity (kg/kg)
 
         init: float
             Contant initial sea temperature in the domain. If None (default), then T_f is used.
@@ -186,11 +186,11 @@ class Diusst:
         """
 
         # Extract data
-        time_data = data['times'].to_numpy(np.float64)
-        wind_data = data['wind'].to_numpy(np.float64)
-        swrad_data = data['swrad'].to_numpy(np.float64)
-        airtemp_data = data['atemp'].to_numpy(np.float64)
-        humid_data = data['humid'].to_numpy(np.float64)
+        time_data = data['time'].to_numpy()
+        wind_data = data['wind'].to_numpy()
+        swrad_data = data['swrad'].to_numpy()
+        airtemp_data = data['atemp_rel'].to_numpy()
+        humid_data = data['humid'].to_numpy()
 
         # Define vertical grid
         if self.ngrid is None:
@@ -298,7 +298,7 @@ class Diusst:
             return [T[:,1:], time_data, z[1:]]
 
         elif output == 'detailed':
-            return [T[:,1:], time_data, z[1:], [Q_s, Q_l, R_lw, R_sw[:,1]]]
+            return [T[:,1:], time_data, z[1:], [np.array(Q_s), np.array(Q_l), np.array(R_lw), R_sw[:,1]]]
 
 
     ###############################################################################################
@@ -314,11 +314,11 @@ class Diusst:
         ----------
         data: dict or Pandas DataFrame or xarray DataSet
             Atmosheric input data. Must contain time series of the following variables, labeled:
-            'times':    Time since midnight in local time (s)
-            'wind':     Wind speed (m/s)
-            'swrad':    Incident solar irradiance (W/m^2)
-            'atemp':    Air temperature (K)
-            'humid':    Specific humidity (kg/kg)
+            'time':         Time since midnight in local time (s)
+            'wind':         Wind speed (m/s)
+            'swrad':        Incident solar irradiance (W/m^2)
+            'atemp_rel':    Air temperature relative to foundation temperature (K)
+            'humid':        Specific humidity (kg/kg)
 
         save: str
             Save the interpolated data set under the file name inserted for save.
@@ -341,14 +341,14 @@ class Diusst:
         dz = (z[1:]-z[:-1])[:-1]
 
         # Extract data
-        times = data['times'].to_numpy(np.float64)
-        sst = data['sst'].to_numpy(np.float64)
-        sst_err = data['sst_err'].to_numpy(np.float64)
-        ftemp = data['ftemp'].to_numpy(np.float64)
-        wind = data['wind'].to_numpy(np.float64)
-        atemp = data['atemp'].to_numpy(np.float64)
-        swrad = data['swrad'].to_numpy(np.float64)
-        humid = data['humid'].to_numpy(np.float64)
+        times = data['time'].to_numpy()
+        sst = data['skinsst'].to_numpy()
+        sst_err = data['dsst_err'].to_numpy()
+        ftemp = data['ftemp'].to_numpy()
+        wind = data['wind'].to_numpy()
+        atemp = data['atemp_rel'].to_numpy()
+        swrad = data['swrad'].to_numpy()
+        humid = data['humid'].to_numpy()
 
         # Initialize arrays to store interpolated data
         series = np.stack((sst, sst_err, ftemp, wind, atemp, swrad, humid))
@@ -393,7 +393,7 @@ class Diusst:
 
         # Create interpolated dataset
         final = np.row_stack((times_concat,series_concat)).transpose()
-        df_final = pd.DataFrame(final[1:,:], columns=['times','sst','sst_err','ftemp','wind','atemp','swrad','humid'])
+        df_final = pd.DataFrame(final[1:,:], columns=['time','skinsst','dsst_err','ftemp','wind','atemp_rel','swrad','humid'])
 
         # Option to save as CSV
         if save is not None:

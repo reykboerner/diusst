@@ -49,11 +49,11 @@ class Slab:
     def simulate(self, data, output='T', progress=True):
 
         # Extract data
-        time_data = data['times'].to_numpy(np.float64)
-        wind_data = data['wind'].to_numpy(np.float64)
-        swrad_data = data['swrad'].to_numpy(np.float64)
-        airtemp_data = data['atemp'].to_numpy(np.float64)
-        humid_data = data['humid'].to_numpy(np.float64)
+        time_data = data['time'].to_numpy()
+        wind_data = data['wind'].to_numpy()
+        swrad_data = data['swrad'].to_numpy()
+        airtemp_data = data['atemp_rel'].to_numpy()
+        humid_data = data['humid'].to_numpy()
 
         T = np.ones(len(time_data)) * self.T_f
         dt = time_data[1:] - time_data[:-1]
@@ -99,14 +99,14 @@ class Slab:
         """
 
         # Extract data from input file
-        times = data['times'].to_numpy(np.float64)
-        sst = data['sst'].to_numpy(np.float64)
-        sst_err = data['sst_err'].to_numpy(np.float64)
-        ftemp = data['ftemp'].to_numpy(np.float64)
-        wind = data['wind'].to_numpy(np.float64)
-        atemp = data['atemp'].to_numpy(np.float64)
-        swrad = data['swrad'].to_numpy(np.float64)
-        humid = data['humid'].to_numpy(np.float64)
+        times = data['time'].to_numpy()
+        sst = data['skinsst'].to_numpy()
+        sst_err = data['dsst_err'].to_numpy()
+        ftemp = data['ftemp'].to_numpy()
+        wind = data['wind'].to_numpy()
+        atemp = data['atemp_rel'].to_numpy()
+        swrad = data['swrad'].to_numpy()
+        humid = data['humid'].to_numpy()
 
         # Initialize arrays to store interpolated data
         series = np.stack((sst, sst_err, ftemp, wind, atemp, swrad, humid))
@@ -131,7 +131,7 @@ class Slab:
 
         # Create interpolated dataset
         final = np.row_stack((times_concat,series_concat)).transpose()
-        df_final = pd.DataFrame(final[1:,:], columns=['times','sst','sst_err','ftemp','wind','atemp','swrad','humid'])
+        df_final = pd.DataFrame(final[1:,:], columns=['time','skinsst','dsst_err','ftemp','wind','atemp_rel','swrad','humid'])
 
         # Option to save as CSV
         if save is not None:
