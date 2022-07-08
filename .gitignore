@@ -13,7 +13,6 @@
 *.fdb_latexmk
 *.fls
 **/__pycache__/**
-/output_files/
-**/old/**
+/output_files/**/old/**
 /vor_hackathon/
 /before_arxiv/
