@@ -5,7 +5,7 @@ __author__ = 'Reyk Boerner'
 ###########################################################
 
 # Output storage
-run_id = 'paper_bayesian_slab-A1_ftemp-totalmean'
+run_id = 'paper_bayesian_slab_ftemp-totalmean'
 output_path = '../../output_files/'
 
 # Fit parameters
@@ -29,10 +29,10 @@ sinkstd = 10
 # Model
 tstep = 3
 wind_max = 10
-humidity = 15
+const_humid = True
 
 data_path = '../input_data/moce5/'
-data_filename = 'training_moce5_err-boatspd-x2_humid10.csv'
+data_filename = 'moce5_dataset.cdf'
 data_interval1 = [96,413]
 data_interval2 = [1290,1585]
 removeidx2 = [69,74,81,82,99,100,171,172,176]
@@ -55,7 +55,7 @@ sys.path.append(parent+'/src/')
 
 # Load external modules
 import numpy as np
-import pandas as pd
+import xarray as xr
 import emcee
 from multiprocessing import Pool, cpu_count
 
@@ -78,37 +78,27 @@ print('... Data loaded from '+data_path+data_filename)
 
 ###########################################################
 # Load dataset
-data_orig1 = pd.read_csv(data_path+data_filename)[data_interval1[0]:data_interval1[1]]
+data_orig1 = xr.load_dataset(data_path+data_filename, decode_timedelta=False).isel(time=slice(data_interval1[0], data_interval1[1]))
 
-data_orig2_dirty = pd.read_csv(data_path+data_filename)[data_interval2[0]:data_interval2[1]]
-data_orig2 = data_orig2_dirty.drop(data_orig2_dirty.index[removeidx2])
+data_orig2_dirty = xr.load_dataset(data_path+data_filename, decode_timedelta=False).isel(time=slice(data_interval2[0], data_interval2[1]))
+data_orig2 = data_orig2_dirty.drop_isel(time=removeidx2)
 
 # Get mean foundation temperature
-ftemp = np.mean(pd.read_csv(data_path+data_filename)['ftemp'].to_numpy())
+ftemp = float(xr.load_dataset(data_path+data_filename, decode_timedelta=False).T_f)
 
 # Extract data from dataset 1
-ftemp1 = np.mean(data_orig1['ftemp'].to_numpy(np.float64))
-times_orig1 = data_orig1['times'].to_numpy(np.float64)
-sst_data1 = data_orig1['sst'].to_numpy(np.float64) - data_orig1['ftemp'].to_numpy(np.float64)
-sst_err1 = data_orig1['sst_err'].to_numpy(np.float64)
+times_orig1 = data_orig1['time'].to_numpy()
+dsst_data1 = data_orig1['dsst'].to_numpy()
+dsst_err1 = data_orig1['dsst_err'].to_numpy()
 
 # Extract data from dataset 2
-ftemp2 = np.mean(data_orig2['ftemp'].to_numpy(np.float64))
-times_orig2 = data_orig2['times'].to_numpy(np.float64)
-sst_data2 = data_orig2['sst'].to_numpy(np.float64) - data_orig2['ftemp'].to_numpy(np.float64)
-sst_err2 = data_orig2['sst_err'].to_numpy(np.float64)
+times_orig2 = data_orig2['time'].to_numpy()
+dsst_data2 = data_orig2['dsst'].to_numpy()
+dsst_err2 = data_orig2['dsst_err'].to_numpy()
 
-# Adjust air temperature data to maintain correct air-sea temperature contrast after fixing foundation temperature
-#data_orig1['atemp'] = data_orig1['atemp'] - data_orig1['ftemp'] + ftemp1
-data_orig1['atemp'] = data_orig1['atemp'] - data_orig1['ftemp'] + ftemp
-#data_orig2['atemp'] = data_orig2['atemp'] - data_orig2['ftemp'] + ftemp2
-data_orig2['atemp'] = data_orig2['atemp'] - data_orig2['ftemp'] + ftemp
-print('... Adjusted air temperature data relative to constant foundation temperature Tf = {:.2f}.'.format(ftemp))
-
-# Set humidity to 15 g/kg
-data_orig1['humid'] = data_orig1['humid']/10*humidity
-data_orig2['humid'] = data_orig2['humid']/10*humidity
-print('... Set humidity to {} g/kg.'.format(humidity))
+print('... Foundation temperature set to {:.3f} K.'.format(ftemp))
+if const_humid:
+    print('... Specific humidity set to {:.1f} g/kg.'.format(float(data_orig1['humid'].isel(time=0))*1000))
 
 ###########################################################
 # Define likelihood function
@@ -127,8 +117,8 @@ def bayesian_likelihood(params):
     sst_model1 = simu1 - ftemp
     sst_model2 = simu2 - ftemp
 
-    sum1 = np.sum( (sst_model1[idx1] - sst_data1[:-1])**2 / sst_err1[:-1]**2 )
-    sum2 = np.sum( (sst_model2[idx2] - sst_data2[:-1])**2 / sst_err2[:-1]**2 )
+    sum1 = np.sum( (sst_model1[idx1] - dsst_data1[:-1])**2 / dsst_err1[:-1]**2 )
+    sum2 = np.sum( (sst_model2[idx2] - dsst_data2[:-1])**2 / dsst_err2[:-1]**2 )
     mse = sum1 + sum2
     return mse
 
