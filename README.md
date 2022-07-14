@@ -1,5 +1,5 @@
-# DiuSST - Diurnal sea surface temperature model
-A simple 1D model of diurnal sea surface temperature variability, designed as an interactive boundary condition for idealized atmospheric simulations.
+# DiuSST, a diurnal sea surface temperature model
+Simple 1D model of diurnal sea surface temperature variability, designed as an interactive oceanic boundary condition for cloud-resolving simulations.
 
 > #### Quick links
 > * [Paper](https://arxiv.org/abs/2205.07933) (arXiv preprint)
@@ -13,41 +13,37 @@ A simple 1D model of diurnal sea surface temperature variability, designed as an
 <p align = "center"><img src="https://github.com/reykboerner/diusst/blob/master/docs/header-image.png" alt="header-image" width="90%"/></p>
 
 ## About
-This repository contains code for running and calibrating the *diuSST* model developed in the context of my master project at University of Copenhagen. Have a look at the [summary](https://github.com/reykboerner/diusst/blob/master/docs/summary.md), [paper](https://arxiv.org/abs/2205.07933) or [thesis](https://nbi.ku.dk/english/theses/masters-theses/reyk-borner/boerner_MSc_thesis.pdf) to learn more.
-
-Below, you will find information on how to use the code in this repo.
+This repository contains code for running and calibrating the *diuSST* model. Have a look at the [summary](https://github.com/reykboerner/diusst/blob/master/docs/summary.md), [paper](https://arxiv.org/abs/2205.07933) or [thesis](https://nbi.ku.dk/english/theses/masters-theses/reyk-borner/boerner_MSc_thesis.pdf) to learn more.
 
 The main source code is located in the `src` folder. It contains Python implementations of the *diuSST* model (`diusst.py`) as well as a single-layer slab ocean model (`slab.py`) for comparison.
 A Fortran implementation is in progress.
 
 To exemplify how the model performs when forced with atmospheric data, the `input_data` folder contains an observational dataset from the MOCE-5 cruise in the Eastern Pacific. Furthermore, the `scripts` folder features code to calibrate the model parameters from data using Bayesian inference and MCMC sampling.
 
+**Reproducability.** Results published in the [paper](https://arxiv.org/abs/2205.07933) were produced with version `v1.1` of this repository. Code to reproduce figures is located in `scripts/figs`. Bayesian inference was performed using the scripts `paper_bayesian_diusst.py` (diuSST model) and `paper_bayesian_slab.py` (slab model).
+
 ## Getting started
 
 #### Prerequisites
-Clone the repo to your local hard drive using `git clone https://github.com/reykboerner/diusst.git`.
 
-The code is written in Python3 and requires the following Python modules:
-* numpy
-* scipy
-* pandas
-* tqdm
+The code is written in Python3 and requires the following modules:
+* `numpy`, `scipy`, `xarray`, `tqdm`.
 
 Additionally, for Bayesian inference we require
-* emcee
-* h5py
+* `emcee`, `h5py`.
 
-Use `pip install <modulename>` to install the packages.
-
-### Running simulations with diuSST
+#### Running simulations with diuSST
 
 The *diuSST* model is written as a Python class `Diusst`. The general procedure for running a simulation is
 ```
-# create model instance with settings specified by args
-model = DiuSST()
+# load model
+from diusst import Diusst
 
-# interpolate atmospheric data
-data = model.interpolate(dataset)
+# create model instance
+model = Diusst()
+
+# interpolate atmospheric data set
+data = model.interpolate(<Dataset>)
 
 # run the model
 simulation = model.simulate(data)
@@ -57,10 +53,17 @@ Model settings are specified through the `Diusst` class attributes. The interpol
 
 Check out the [Jupyter notebook tutorial](https://github.com/reykboerner/diusst/blob/master/docs/run_diusst.ipynb) to learn how to run the code in practice and create a plot like the one above.
 
-### Bayesian inference
+#### Calibrating model parameters
 
-> currently reworking this section (as of June 27, 2022)
+The `scripts` folder contains code to calibrate the model parameters based on a given data set (Bayesian inference). Using the `emcee` package, the code runs a Markov Chain Monte Carlo (MCMC) algorithm to sample the posterior distribution of parameters.
 
+To run the script, change into the `scripts` folder and execute `python3 paper_bayesian_diusst.py` in a terminal.
+
+Settings such as number of walkers and steps, location of the data set, and choice of prior can be modified directly in the `paper_bayesian_diusst.py` file.
+
+Analogous to calibrating the parameters of *diuSST*, the script `paper_bayesian_slab.py` performs Bayesian inference of the slab model parameters (see `slab.py`).
+
+---
 
 ## Documentation
 
@@ -83,7 +86,7 @@ In the Python script `src/diusst.py`, the model is written as a Python class wit
 #### Model options
 | Label         | Description     | Values |
 |--------------|-----------|------------|
-| `diffu_profile` | Specifies the vertical diffusivity profile to be used (constant, linear, exponential, or stability-dependent) | `CONST` (default), `LIN` (default), `EXP`, `STAB` |
+| `diffu_profile` | Specifies the vertical diffusivity profile to be used (constant, linear, exponential, or stability-dependent) | `CONST` (default), `LIN` (default), `EXP`, `S-LIN`, `S-EXP` |
 | `reflect` | Switch on/off reflection of downward shortwave radiation at the sea surface | bool (default `True`) |
 | `CFL`| Target CFL number when determining the variable time step during data interpolation | float `CFL < 1` (default `0.95`) |
 | `wind_max` | Cutoff maximum wind speed in the diffusion term, to limit computational cost (surface fluxes remain unaffected by this) | float (in units m/s, default `10` )|
