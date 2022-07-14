@@ -1,12 +1,32 @@
 __author__ = 'Reyk Boerner'
 
+'''
+Source code for class Slab.
+'''
+
 import numpy as np
 import pandas as pd
 from scipy.interpolate import interp1d
 from tqdm import tqdm
 
 class Slab:
-    """docstring for Slab."""
+    """
+    Single-layer slab ocean model with proportional and integral corrector.
+    Documentation: see https://arxiv.org/pdf/2205.07933.pdf
+
+    Methods
+    ----------
+
+    simulate(data, options)
+        Run the slab model forced by a given atmospheric data set.
+
+    interpolate(data, options)
+        Interpolate a given data set in time, with constant time step.
+
+    get_sat_humid(args)
+        Calculate the saturation specific humidity for given air temperature.
+
+    """
 
     def __init__(self,
         d = 1,
@@ -14,19 +34,49 @@ class Slab:
         xi_1 = 1e-3,
         xi_2 = 5e-9,
         T_f = 300,
-        n_w = 1.34,                     # refractive index of sea water
-        n_a = 1.0,                      # refractive index of air
-        rho_w = 1027,                   # density of sea water (in kg/m^3)
-        rho_a = 1.1,                    # density of air (in kg/m^3)
-        C_s = 1.3e-3,                   # turbulent exchange coefficient for sensible heat
-        C_l = 1.5e-3,                   # turbulent exchange coefficient for latent heat
-        L_evap = 2.5e6,                 # latent heat of evaporization (J/kg) Source: Klose p.151
-        cp_w = 3850,                    # specific heat of sea water at const pressure (in J/K/kg)
-        cp_a = 1005,                    # specific heat of air at const pressure (in J/K/kg)
-        sb_const = 5.67e-8,             # Stefan Boltzmann constant (in W/m^2/K^4)
+        cp_w = 3850,
+        cp_a = 1005,
+        rho_w = 1027,
+        rho_a = 1.1,
+        n_w = 1.34,
+        n_a = 1.0,
+        C_s = 1.3e-3,
+        C_l = 1.5e-3,
+        L_evap = 2.5e6,
+        sb_const = 5.67e-8,
         gas_const = 461.51,
-        wind_max = 10
-    ):
+        wind_max = 10):
+
+        """
+        Options
+        ----------
+
+        wind_max: float
+            Cutoff maximum wind speed in the diffusion term, to limit computational cost.
+
+        Parameters
+        ----------
+        d:          (float) Slab thickness (m).
+        Q_sink:     (float) Constant heat sink (W/m^2).
+        xi_1        (float) Proportional corrector strength.
+        xi_2        (float) Integral corrector strength.
+        T_f:        (float) Foundation temperature (K).
+
+        Physical constants
+        ----------
+        cp_w        (float) Specific heat capacity at constant pressure of sea water (J/kg/K).
+        cp_a        (float) Specific heat capacity at constant pressure of air (J/kg/K).
+        rho_w       (float) Density of sea water (kg/m^3).
+        rho_a       (float) Density of air (kg/m^3).
+        n_w         (float) Refractive index of sea water.
+        n_a         (float) Refractive index of air.
+        C_s         (float) Stanton number.
+        C_l         (float) Dalton number.
+        L_evap      (float) Latent heat of vaporization (J/kg).
+        sb_const    (float) Stefan-Boltzmann constant (W/m^2/K^4).
+        gas_const   (float) Gas constant of water vapor (J/kg/K).
+        """
+
         self.d = d
         self.Q_sink = Q_sink
         self.xi_1 = xi_1
@@ -47,6 +97,36 @@ class Slab:
 
 
     def simulate(self, data, output='T', progress=True):
+        """
+        Run the slab model under given atmospheric forcing.
+        Numerical integration based on explicit Euler scheme.
+
+        Arguments
+        ----------
+        data: dict or Pandas DataFrame or xarray DataSet
+            Atmosheric input data. Must contain time series of the following variables, labeled:
+            'time':         Time since midnight in local time (s)
+            'wind':         Wind speed (m/s)
+            'swrad':        Incident solar irradiance (W/m^2)
+            'atemp_rel':    Air temperature relative to foundation temperature (K)
+            'humid':        Specific humidity (kg/kg)
+
+        output: str
+            What data to return.
+
+        progress: bool
+            Switch for tqdm progress bar.
+
+        Returns
+        ----------
+        if 'output' is 'T':         T                    (1D array)
+        if 'output' is 'detailed':  [T, [Qs, Ql, Rlw]]   (list)
+
+            T:      (1D array) Slab temperature as a function of time
+            Qs:     (1D array) Latent heat flux (1D array) (W/m^2)
+            Ql:     (1D array) Sensible heat flux (1D array) (W/m^2)
+            Rlw:    (1D array) Longwave radiative flux (W/m^2)
+        """
 
         # Extract data
         time_data = data['time'].to_numpy()
@@ -96,6 +176,34 @@ class Slab:
     def interpolate(self, data, dt=1, save=None, verbose=True):
         """
         Interpolates the input data with constant time step dt.
+
+        Arguments
+        ----------
+        data: dict or Pandas DataFrame or xarray DataSet
+            Atmosheric input data. Must contain time series of the following variables, labeled:
+            'time':         Time since midnight in local time (s)
+            'wind':         Wind speed (m/s)
+            'swrad':        Incident solar irradiance (W/m^2)
+            'atemp_rel':    Air temperature relative to foundation temperature (K)
+            'humid':        Specific humidity (kg/kg)
+
+        dt: float
+            Time step between interpolated data points (in seconds).
+
+        save: str
+            Save the interpolated data set under the file name inserted for save.
+            If None, then no file is saved.
+
+        verbose: bool
+            Control verbosity of output.
+
+        Returns
+        ----------
+        [df_final, dt_list, idx_list]: list
+            df_final:   (Pandas DataFrame) Interpolated data set.
+            dt_list:    (list) List of computed time step durations.
+            idx_list:   (list) List of indexes in interpolated data set corresponding to the original data points.
+
         """
 
         # Extract data from input file

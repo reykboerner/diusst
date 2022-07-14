@@ -1,5 +1,9 @@
 __author__ = 'Reyk Boerner'
 
+'''
+Source code for class Diusst.
+'''
+
 import numpy as np
 import pandas as pd
 from scipy.optimize import fsolve

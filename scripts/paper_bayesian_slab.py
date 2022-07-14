@@ -1,5 +1,12 @@
 __author__ = 'Reyk Boerner'
 
+'''
+Script to perform Bayesian inference for the diuSST model.
+- Computes the posterior distribtion of parametes d, Q_sink, xi_1, xi_2
+- Uses the emcee algorithm for MCMC sampling
+- Specify run settings below!
+'''
+
 ###########################################################
 # RUN SETTINGS ############################################
 ###########################################################

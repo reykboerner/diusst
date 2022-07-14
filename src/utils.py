@@ -1,3 +1,10 @@
+__author__ = 'Reyk Boerner'
+
+'''
+Utility functions for class Diusst (see diusst.py).
+Documentation: see https://arxiv.org/pdf/2205.07933.pdf
+'''
+
 import numpy as np
 
 def _lapl_central(array, deriv1, deriv2):
@@ -11,7 +18,6 @@ def _lapl_central(array, deriv1, deriv2):
     deriv2  (1D np.array): second stretched grid derivative evaluated at all grid points
 
     Input array must have len(array) = ngrid + 2 (ghost point at top and bottom).
-    (See eqs. (5.29) and (5.30) of thesis.)
     """
 
     # Initialize output vector
@@ -33,7 +39,6 @@ def _grad_central(array, deriv1):
     deriv1  (1D np.array): first stretched grid derivative evaluated at all grid points
 
     Input array must have len(array) = ngrid + 2 (ghost point at top and bottom).
-    (See eqs. (5.29) and (5.30) of thesis.)
     """
 
     grad = np.zeros(len(array))
@@ -50,7 +55,6 @@ def _grad_bckward(array, deriv1):
     deriv1  (1D np.array): first stretched grid derivative evaluated at all grid points
 
     Input array must have len(array) = ngrid + 2 (ghost point at top and bottom).
-    (See eqs. (5.29) and (5.30) of thesis.)
     """
 
     grad = np.zeros(len(array))
@@ -59,6 +63,17 @@ def _grad_bckward(array, deriv1):
 
 
 def _grad_forward(array, deriv1):
+    """
+    1D gradient (first spatial derivative) as forward finite differences on stretched mesh.
+
+    Arguments
+    ----------
+    array   (1D np.array): input vector
+    deriv1  (1D np.array): first stretched grid derivative evaluated at all grid points
+
+    Input array must have len(array) = ngrid + 2 (ghost point at top and bottom).
+    """
+
     grad = np.zeros(len(array))
     grad[1:-1] = (array[2:] - array[1:-1]) * deriv1[1:-1]
     return grad
