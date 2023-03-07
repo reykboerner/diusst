@@ -1,10 +1,12 @@
+import pandas as pd
+
 class AtmosData:
     """
     Dataset containing atmospheric and upper ocean variables
     """
 
     def __init__(self, dataset):
-        if type(dataset) == pandas.core.frame.DataFrame:
+        if type(dataset) == pd.core.frame.DataFrame:
             self.ds = dataset
         elif type(dataset) == str:
             self.ds = xr.load_dataset(dataset, decode_timedelta=False)

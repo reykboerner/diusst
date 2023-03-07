@@ -22,7 +22,7 @@ from tqdm import tqdm
 
 class ZengBeljaars:
 
-    def __init__(self, takaya10=False, reflect=False,
+    def __init__(self, takaya10=True, reflect=False,
         T_f = 300,                      # foundation temperature (K)
         d = 3,                          # warm layer depth (m)
         nu = 0.3,                       # profile shape parameter
@@ -45,7 +45,7 @@ class ZengBeljaars:
         rad_a = [0.28, 0.27, 0.45],     # coefficients of radiation absorption scheme
         rad_b = [71.5, 2.8, 0.07],      # exponents of radiation absorption scheme (1/m)
         z_wind = 10,                    # wind speed measurement height above sea level (m)
-        z_rough = 0.5):                 # roughness height of sea surface (m)
+        z_rough = None):                # roughness height of sea surface (m)
 
         self.T_f = T_f
         self.d = d
@@ -73,20 +73,28 @@ class ZengBeljaars:
         self.z_wind = z_wind
         self.z_rough = z_rough
 
-    def friction_vel(self, u, z, z0):
+    def friction_vel(self, u, z, z0=None, C_drag=0.0015):
         """
         Calculates the friction velocity in the water, given wind speed u at height z above
         the surface.
         z0 is the roughness height of the surface (e.g., average wave height).
         Source: https://www.calculatoratoz.com/en/eniction-veloceny-for-known-wind-speed-at-height-above-surface-calculator/calc-23770
         and https://en.wikipedia.org/wiki/Shear_velocity
+        and Takaya et al. (2010)
         """
-        return self.k*u/np.log(z/z0)*np.sqrt(self.rho_a/self.rho_w)
+        if z0 is None:
+            wind_stress = self.rho_a*C_drag*u**2
+            return np.sqrt(wind_stress/self.rho_w)
+        else:
+            return self.k*u/np.log(z/z0)*np.sqrt(self.rho_a/self.rho_w)
     
     def stability_function(self, x):
         """Eq. (9) of Zeng and Beljaars 2005 [1]"""
         if x >= 0:
-            return 1 + 5*x
+            if self.takaya10:
+                return 1 + (5*x + 4*x**2)/(1 + 3*x + 0.25*x**2)
+            else:
+                return 1 + 5*x
         else:
             return (1 - 16*x)**(-0.5)
     
@@ -131,7 +139,7 @@ class ZengBeljaars:
         and modification according to the COARE3.6 algorithm [3]"""
         heatflux = (self.surface_flux(data, tidx, Ts) 
             + self.f_s(delta)*self.shortwave_net(data, tidx, self.reflect))
-        u_fric = self.friction_vel(data.u[tidx], self.z_wind, self.z_rough)
+        u_fric = self.friction_vel(data.u[tidx], self.z_wind, z0=self.z_rough)
         factor = - (16*self.g*self.a_w*self.nu_w**3)/(u_fric**4*self.k_w**2*self.rho_w*self.cp_w)
         delta_new = 6*(1 + (max(0, factor)*heatflux)**(3/4))**(-1/3)*self.nu_w/u_fric
         return min(0.01, delta_new)
@@ -146,17 +154,18 @@ class ZengBeljaars:
 
     def L_MO(self, data, tidx, Ts, dT):
         """Monin-Obukhov length, eq. (10) of Zeng and Beljaars 2005 [1]"""
-        u_fric = self.friction_vel(data.u[tidx], self.z_wind, self.z_rough)
+        u_fric = self.friction_vel(data.u[tidx], self.z_wind, z0=self.z_rough)
         return (self.rho_w*self.cp_w*u_fric**3)/(self.k*self.F_d(data, tidx, Ts, dT))
         
     def F_d(self, data, tidx, Ts, dT):
+        """Buoyancy flux, eq. (12) of Zeng and Beljaars 2005 [1]"""
         if dT <= 0:
             heatflux = (self.surface_flux(data, tidx, Ts) 
                 + self.shortwave_net(data, tidx, self.reflect)
                 - self.R(data, tidx))
             return self.g*self.a_w*heatflux
         else:
-            u_fric = self.friction_vel(data.u[tidx], self.z_wind, self.z_rough)
+            u_fric = self.friction_vel(data.u[tidx], self.z_wind, z0=self.z_rough)
             factor = np.sqrt(self.nu*self.g*self.a_w/(5*self.d))*self.rho_w*self.cp_w
             return factor*u_fric**2*np.sqrt(dT)
 
@@ -166,12 +175,12 @@ class ZengBeljaars:
                 + self.shortwave_net(data, tidx, self.reflect)
                 - self.R(data, tidx))
         stab_func = self.stability_function(self.d/self.L_MO(data, tidx, Ts, dT))
-        u_fric = self.friction_vel(data.u[tidx], self.z_wind, self.z_rough)
+        u_fric = self.friction_vel(data.u[tidx], self.z_wind, z0=self.z_rough)
         term1 = heatflux/(self.d*self.rho_w*self.cp_w*self.nu/(self.nu + 1))        
         term2 = (self.nu + 1)*self.k*u_fric*dT/(self.d*stab_func)
         return term1 - term2
     
-    def simulate(self, data, init):
+    def simulate(self, data, init, skin_iter=6, output="T"):
         """
         Evolves the sea skin and subskin temperature forward in time, given an atmospheric
         dataset 'data' and initial condition 'init'.
@@ -196,6 +205,7 @@ class ZengBeljaars:
         x = np.ones(N)*init[0]
         y = np.ones(N)*init[1]
         delta = np.ones(N)*init[2]
+        flux = np.zeros((N,3))
 
         for i in tqdm(range(1,N)):
             # previous skin temperature
@@ -207,6 +217,16 @@ class ZengBeljaars:
             # compute bulk warming
             x[i] = x[i-1] + dt[i-1]*self.dsst_dot(data, i-1, Ts, x[i-1])
             # compute delta
-            delta[i] = self.skin_thickness(data, i-1, Ts, delta[i-1])
-        
-        return x, y, delta
+            _delta = delta[i-1]
+            for k in range(skin_iter):
+                _delta = self.skin_thickness(data, i-1, Ts, _delta)
+            delta[i] = _delta
+
+            if output == "all":
+                flux[i] = np.fromiter(self.surface_flux(data, i, Ts, sum=False).values(),
+                dtype=float)
+            
+        if output == "all":
+            return x, y, delta, [flux[:,j] for j in range(3)]
+        elif output == "T":
+            return x, y
