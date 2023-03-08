@@ -1,8 +1,8 @@
-# diuSST: Models of diurnal sea surface temperature
+# Simple models of diurnal SST variability
 
-This repository contains Python implementations of three simple models for simulating the diurnal variability of sea surface temperature (SST) under given atmospheric forcing.
+This repository contains Python implementations of three simple models for simulating the diurnal variability of sea surface temperature (SST) under given atmospheric forcing, suitable as interactive boundary conditions for idealized cloud-resolving simulations.
 
-* **diuSST**, a conceptual 1D model of upper ocean temperature dynamics
+* **diuSST**, a conceptual depth-resolved 1D model of upper ocean temperature dynamics
 * **ZengBeljaars05**, a prognostic scheme of sea skin temperature by Zeng & Beljaars
 * **Slab**, a simple slab ocean with proportional and integral correctors
 
