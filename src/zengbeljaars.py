@@ -15,9 +15,7 @@ References:
 
 __author__ = "Reyk Boerner"
 
-import xarray as xr
 import numpy as np
-import pandas
 from tqdm import tqdm
 
 class ZengBeljaars:
@@ -44,6 +42,7 @@ class ZengBeljaars:
         gas_const = 461.51,             # gas constant of water vapor (J/(kg K))
         rad_a = [0.28, 0.27, 0.45],     # coefficients of radiation absorption scheme
         rad_b = [71.5, 2.8, 0.07],      # exponents of radiation absorption scheme (1/m)
+        C_drag = 1.3e-3,                # drag coefficient to compute wind stress
         z_wind = 10,                    # wind speed measurement height above sea level (m)
         z_rough = None):                # roughness height of sea surface (m)
 
@@ -70,10 +69,11 @@ class ZengBeljaars:
         self.rad_b = rad_b    
         self.takaya10 = takaya10        # Refinements of Takaya et al. (2010)
         self.reflect = reflect          # surface reflection of incident radiation
+        self.C_drag = C_drag
         self.z_wind = z_wind
         self.z_rough = z_rough
 
-    def friction_vel(self, u, z, z0=None, C_drag=0.0015):
+    def friction_vel(self, u):
         """
         Calculates the friction velocity in the water, given wind speed u at height z above
         the surface.
@@ -82,11 +82,11 @@ class ZengBeljaars:
         and https://en.wikipedia.org/wiki/Shear_velocity
         and Takaya et al. (2010)
         """
-        if z0 is None:
-            wind_stress = self.rho_a*C_drag*u**2
+        if self.z_rough is None:
+            wind_stress = self.rho_a*self.C_drag*u**2
             return np.sqrt(wind_stress/self.rho_w)
         else:
-            return self.k*u/np.log(z/z0)*np.sqrt(self.rho_a/self.rho_w)
+            return self.k*u/np.log(self.z_wind/self.z_rough)*np.sqrt(self.rho_a/self.rho_w)
     
     def stability_function(self, x):
         """Eq. (9) of Zeng and Beljaars 2005 [1]"""
@@ -139,7 +139,7 @@ class ZengBeljaars:
         and modification according to the COARE3.6 algorithm [3]"""
         heatflux = (self.surface_flux(data, tidx, Ts) 
             + self.f_s(delta)*self.shortwave_net(data, tidx, self.reflect))
-        u_fric = self.friction_vel(data.u[tidx], self.z_wind, z0=self.z_rough)
+        u_fric = self.friction_vel(data.u[tidx])
         factor = - (16*self.g*self.a_w*self.nu_w**3)/(u_fric**4*self.k_w**2*self.rho_w*self.cp_w)
         delta_new = 6*(1 + (max(0, factor)*heatflux)**(3/4))**(-1/3)*self.nu_w/u_fric
         return min(0.01, delta_new)
@@ -154,7 +154,7 @@ class ZengBeljaars:
 
     def L_MO(self, data, tidx, Ts, dT):
         """Monin-Obukhov length, eq. (10) of Zeng and Beljaars 2005 [1]"""
-        u_fric = self.friction_vel(data.u[tidx], self.z_wind, z0=self.z_rough)
+        u_fric = self.friction_vel(data.u[tidx])
         return (self.rho_w*self.cp_w*u_fric**3)/(self.k*self.F_d(data, tidx, Ts, dT))
         
     def F_d(self, data, tidx, Ts, dT):
@@ -165,7 +165,7 @@ class ZengBeljaars:
                 - self.R(data, tidx))
             return self.g*self.a_w*heatflux
         else:
-            u_fric = self.friction_vel(data.u[tidx], self.z_wind, z0=self.z_rough)
+            u_fric = self.friction_vel(data.u[tidx])
             factor = np.sqrt(self.nu*self.g*self.a_w/(5*self.d))*self.rho_w*self.cp_w
             return factor*u_fric**2*np.sqrt(dT)
 
@@ -175,7 +175,7 @@ class ZengBeljaars:
                 + self.shortwave_net(data, tidx, self.reflect)
                 - self.R(data, tidx))
         stab_func = self.stability_function(self.d/self.L_MO(data, tidx, Ts, dT))
-        u_fric = self.friction_vel(data.u[tidx], self.z_wind, z0=self.z_rough)
+        u_fric = self.friction_vel(data.u[tidx])
         term1 = heatflux/(self.d*self.rho_w*self.cp_w*self.nu/(self.nu + 1))        
         term2 = (self.nu + 1)*self.k*u_fric*dT/(self.d*stab_func)
         return term1 - term2

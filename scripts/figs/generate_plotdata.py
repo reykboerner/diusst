@@ -27,14 +27,14 @@ T_f = float(data.T_f)
 kappa, mu, alpha = 0.00013400773159919014, 0.002848626826335415, 3.518014095655488
 
 # Parameter values - ZB05
-nu, z_wind, z_rough, takaya10, skin_iter = 0.3, 20, None, True, 3
+nu, z_wind, C_drag, takaya10, skin_iter = 0.3, 10, 1.3e-3, True, 3
 
 # Parameter values - slab
 d, Q_sink, xi_1, xi_2 = 1.2010661501536875, 92.6740215866626, 0.00011854796494168126, 3.121690816078168e-12
 
 # Instantiate models
 model_diusst = Diusst(T_f=T_f, kappa=kappa, mu=mu, alpha=alpha, sigma=0.8, lambd=3, diffu_profile='LIN', CFL=0.95, z_f=10, dz0=0.1, ngrid=40)
-model_zb05 = ZengBeljaars(T_f=T_f, z_wind=z_wind, nu=nu, z_rough=z_rough, takaya10=takaya10)
+model_zb05 = ZengBeljaars(T_f=T_f, z_wind=z_wind, nu=nu, C_drag=C_drag, takaya10=takaya10)
 model_slab = Slab(d=d, Q_sink=Q_sink, xi_1=xi_1, xi_2=xi_2, T_f=T_f)
 model_const = Slab(d=1e5, Q_sink=0, xi_1=1e-3, xi_2=0, T_f=T_f)
 
@@ -89,7 +89,7 @@ simu_slab = T_slab, [Qs_slab, Ql_slab, Rlw_slab]
 simu_const = T_const, [Qs_const, Ql_const, Rlw_const]
 
 # Store simulation data
-np.save('../../output_files/simu_diusst.npy', simu_diusst, allow_pickle=True)
+np.save('../../output_files/simu_diusst.npy', simu_diusst)#, allow_pickle=True)
 print('... saved simulation output as {}'.format('../../output_files/simu_diusst.npy'))
 np.save('../../output_files/simu_zb05.npy', simu_zb05, allow_pickle=True)
 print('... saved simulation output as {}'.format('../../output_files/simu_zb05.npy'))
