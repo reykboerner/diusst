@@ -264,6 +264,10 @@ class Diusst:
         else:
             itsteps = range(1, N_t)
 
+        d_term = np.zeros((N_t, N_z))
+        m_term = np.zeros((N_t, N_z))
+        s_term = np.zeros((N_t, N_z))
+
         for n in itsteps:
 
             # Diffusion term (state-dependent diffusivity profiles)
@@ -293,6 +297,11 @@ class Diusst:
                 - mix * (T[n-1] - self.T_f)
                 + _grad_forward(Q, dv1) / (self.rho_w * self.cp_w)
                 )
+            
+            d_term[n] = dt[n-1] * (diffu[n-1] * _lapl_central(T[n-1], dv1, dv2)
+                + ddiffu[n-1] * _grad_central(T[n-1], dv1))
+            m_term[n] = dt[n-1] * (- mix * (T[n-1] - self.T_f))
+            s_term[n] = dt[n-1] * (_grad_forward(Q, dv1) / (self.rho_w * self.cp_w))
 
             # Write heat fluxes
             if output == 'detailed':
@@ -302,7 +311,7 @@ class Diusst:
             return [T[:,1:], time_data, z[1:]]
 
         elif output == 'detailed':
-            return [T[:,1:], time_data, z[1:], [np.array(Q_s), np.array(Q_l), np.array(R_lw), R_sw[:,1]]]
+            return [T[:,1:], time_data, z[1:], [np.array(Q_s), np.array(Q_l), np.array(R_lw), R_sw[:,1]], [d_term, m_term, s_term]]
 
 
     ###############################################################################################
