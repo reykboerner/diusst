@@ -1,8 +1,8 @@
 # DiuSST, a diurnal sea surface temperature model
-Simple 1D model of diurnal sea surface temperature variability, designed as an interactive oceanic boundary condition for cloud-resolving simulations.
+Simple 1D model of the diurnal warm layer, designed as an interactive oceanic boundary condition for cloud-resolving simulations.
 
 > #### Quick links
-> * [Paper](https://arxiv.org/abs/2205.07933) (arXiv preprint)
+> * [Preprint](https://arxiv.org/abs/2205.07933) (arXiv preprint)
 > * [Starter tutorial](https://github.com/reykboerner/diusst/blob/master/docs/run_diusst.ipynb) (introductory example of running the code)
 > * [Video presentation](https://youtu.be/KdOWF_fzRLE) (15-minute recorded talk)
 >
@@ -13,14 +13,14 @@ Simple 1D model of diurnal sea surface temperature variability, designed as an i
 <p align = "center"><img src="https://github.com/reykboerner/diusst/blob/master/docs/header-image.png" alt="header-image" width="90%"/></p>
 
 ## About
-This repository contains code for running and calibrating the *diuSST* model. Have a look at the [summary](https://github.com/reykboerner/diusst/blob/master/docs/summary.md), [paper](https://arxiv.org/abs/2205.07933) or [thesis](https://nbi.ku.dk/english/theses/masters-theses/reyk-borner/boerner_MSc_thesis.pdf) to learn more.
+This repository contains code for running and calibrating the *DiuSST* model. Have a look at the [summary](https://github.com/reykboerner/diusst/blob/master/docs/summary.md), [preprint](https://arxiv.org/abs/2205.07933) or [thesis](https://nbi.ku.dk/english/theses/masters-theses/reyk-borner/boerner_MSc_thesis.pdf) to learn more.
 
-The main source code is located in the `src` folder. It contains Python implementations of the *diuSST* model (`diusst.py`) as well as a single-layer slab ocean model (`slab.py`) for comparison.
+The main source code is located in the `src` folder. It contains Python implementations of the *DiuSST* model (`diusst.py`).
 A Fortran implementation is in progress.
 
 To exemplify how the model performs when forced with atmospheric data, the `input_data` folder contains an observational dataset from the MOCE-5 cruise in the Eastern Pacific. Furthermore, the `scripts` folder features code to calibrate the model parameters from data using Bayesian inference and MCMC sampling.
 
-**Reproducability.** Results published in the [paper](https://arxiv.org/abs/2205.07933) were produced with version `v1.1` of this repository. Code to reproduce figures is located in `scripts/figs`. Bayesian inference was performed using the scripts `paper_bayesian_diusst.py` (diuSST model) and `paper_bayesian_slab.py` (slab model).
+**Reproducability.** Results published in the [preprint](https://arxiv.org/abs/2205.07933) were produced with version `v1.1` of this repository. Code to reproduce figures is located in `scripts/figs`. Bayesian inference was performed using the scripts `paper_bayesian_diusst.py` (DiuSST model) and `paper_bayesian_slab.py` (slab model).
 
 ## Getting started
 
@@ -32,9 +32,9 @@ The code is written in Python3 and requires the following modules:
 Additionally, for Bayesian inference we require
 * `emcee`, `h5py`.
 
-#### Running simulations with diuSST
+#### Running simulations with DiuSST
 
-The *diuSST* model is written as a Python class `Diusst`. The general procedure for running a simulation is
+The *DiuSST* model is written as a Python class `Diusst`. The general procedure for running a simulation is
 ```
 # load model
 from diusst import Diusst
@@ -61,7 +61,7 @@ To run the script, change into the `scripts` folder and execute `python3 paper_b
 
 Settings such as number of walkers and steps, location of the data set, and choice of prior can be modified directly in the `paper_bayesian_diusst.py` file.
 
-Analogous to calibrating the parameters of *diuSST*, the script `paper_bayesian_slab.py` performs Bayesian inference of the slab model parameters (see `slab.py`).
+Analogous to calibrating the parameters of *DiuSST*, the script `paper_bayesian_slab.py` performs Bayesian inference of the slab model parameters (see `slab.py`).
 
 ---
 
