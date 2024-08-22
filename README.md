@@ -1,6 +1,6 @@
 # Conceptual models of the oceanic diurnal warm layer
 
-[![](https://img.shields.io/badge/docs-dev-blue.svg)](#documentation) [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.xx.svg)](https://doi.org/10.5281/zenodo.xx)
+[![](https://img.shields.io/badge/docs-dev-blue.svg)](#documentation) [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.13363481.svg)](https://doi.org/10.5281/zenodo.13363481)
 
 This repository contains Python implementations of three simple models for simulating the diurnal variability of sea surface temperature (SST) under given atmospheric forcing. It further includes an observational [dataset](#observational-dataset) for calibration and validation, plus code to reproduce the results in the [DiuSST model description paper](https://arxiv.org/abs/2205.07933).
 
@@ -24,7 +24,7 @@ Learn more about the *DiuSST* model in [this 15-minute video](https://youtu.be/K
 The MOCE-5 cruise observations used to calibrate the DiuSST model as described in [the paper](https://arxiv.org/abs/2205.07933) is stored in `input_data/moce5/moce5_dataset.cdf` as a netCDF file. The raw data is also contained in the folder `input_data/moce5/`.
 
 ## Reproducibility
-Results in the DiuSST model description [paper](https://arxiv.org/abs/2205.07933) were produced with version `v1.2` of this repository. The script `scripts/generate_plotdata.py` runs the model simulations and saves the model output, which is found in `output_files` as `.npz` files. Code to reproduce figures based on these simulation data is located in `scripts/figs`. Model calibration via Bayesian inference was performed using the scripts `paper_bayesian_diusst.py` (DiuSST model) and `paper_bayesian_slab.py` (Slab model). The resulting posterior distributions are saved in `output_files` as `posterior_diusst.h5` and `posterior_slab.h5`, respectively.
+Results in [the paper](https://arxiv.org/abs/2205.07933) were produced with version `v1.2` of this repository. The script `scripts/generate_plotdata.py` runs the model simulations and saves the model output, which is found in `output_files` as `.npz` files. Code to reproduce figures based on these simulation data is located in `scripts/figs`. Model calibration via Bayesian inference was performed using the scripts `paper_bayesian_diusst.py` (DiuSST model) and `paper_bayesian_slab.py` (Slab model). The resulting posterior distributions are saved in `output_files` as `posterior_diusst.h5` and `posterior_slab.h5`, respectively.
 
 ## Acknowledgements
 This work has been conducted within the Atmospheric Complexity Group at the Niels Bohr Institute, University of Copenhagen, Denmark.
