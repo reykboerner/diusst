@@ -176,17 +176,19 @@ class Diusst:
 
         Returns
         ----------
-        if 'output' is None:        [T, t, z]                       (list)
-        if 'output' is 'detailed':  [T, t, z, [Qs, Ql, Rlw, Rsw]]   (list)
+        if 'output' is None:        [T, t, z]
+        if 'output' is 'detailed':  [T, t, z, [Qs, Ql, Rlw, Rsw], [d_term, m_term, s_term]]
 
             T:      (2D array, time x depth) Sea temperature
-            t:      (1D array) Time (s)
-            z:      (1D array) Depth (m)
-            Qs:     (1D array) Latent heat flux (1D array) (W/m^2)
-            Ql:     (1D array) Sensible heat flux (1D array) (W/m^2)
-            Rlw:    (1D array) Longwave radiative flux (W/m^2)
-            Rsw:    (1D array) Shortwave radiative flux at air-sea interface (W/m^2)
-
+            t:      (1D array, time) Time (s)
+            z:      (1D array, time) Depth (m)
+            Qs:     (1D array, time) Latent heat flux (1D array) (W/m^2)
+            Ql:     (1D array, time) Sensible heat flux (1D array) (W/m^2)
+            Rlw:    (1D array, time) Longwave radiative flux (W/m^2)
+            Rsw:    (1D array, time) Shortwave radiative flux at air-sea interface (W/m^2)
+            d_term: (2D array, time x depth) warming contribution from diffusion term (K)
+            m_term: (2D array, time x depth) warming contribution from mixing term (K)
+            s_term: (2D array, time x depth) warming contribution from source term (K)
         """
 
         # Extract data

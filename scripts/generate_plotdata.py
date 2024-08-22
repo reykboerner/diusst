@@ -10,14 +10,14 @@ import numpy as np
 import matplotlib.pyplot as plt
 import xarray as xr
 import sys
-sys.path.append('../../src/')
+sys.path.append('../src/')
 from atmosdata import AtmosData
 from diusst import Diusst
 from zengbeljaars import ZengBeljaars
 from slab import Slab
 
 # Load forcing data set
-data = xr.load_dataset('../../input_data/moce5/moce5_dataset.cdf', decode_timedelta=False)
+data = xr.load_dataset('../input_data/moce5/moce5_dataset.cdf', decode_timedelta=False)
 time = data['time'].to_numpy()
 dsst = data['dsst'].to_numpy()
 wind = data['wind'].to_numpy()
@@ -44,7 +44,7 @@ atmosdata = AtmosData(data_intp)
 
 # Run simulations
 print('... Run diuSST model')
-T_diusst, t_diusst, z_diusst, Q_diusst = model_diusst.simulate(data_intp, output='detailed')
+T_diusst, t_diusst, z_diusst, Q_diusst, terms = model_diusst.simulate(data_intp, output='detailed')
 Qs_diusst, Ql_diusst, Rlw_diusst, Rsw_diusst = Q_diusst
 
 print('... Run ZB05 model')
@@ -89,13 +89,13 @@ simu_slab = T_slab, [Qs_slab, Ql_slab, Rlw_slab]
 simu_const = T_const, [Qs_const, Ql_const, Rlw_const]
 
 # Store simulation data
-np.savez('../../output_files/simu_diusst.npy', *simu_diusst)
-print('... saved simulation output as {}'.format('../../output_files/simu_diusst.npy'))
-np.savez('../../output_files/simu_zb05.npy', *simu_zb05)
-print('... saved simulation output as {}'.format('../../output_files/simu_zb05.npy'))
-np.savez('../../output_files/simu_slab.npy', *simu_slab)
-print('... saved simulation output as {}'.format('../../output_files/simu_slab.npy'))
-np.savez('../../output_files/simu_const.npy', *simu_const)
-print('... saved simulation output as {}'.format('../../output_files/simu_const.npy'))
+np.savez('../output_files/simu_diusst.npz', *simu_diusst)
+print('... saved simulation output as {}'.format('../../output_files/simu_diusst.npz'))
+np.savez('../output_files/simu_zb05.npz', *simu_zb05)
+print('... saved simulation output as {}'.format('../../output_files/simu_zb05.npz'))
+np.savez('../output_files/simu_slab.npz', *simu_slab)
+print('... saved simulation output as {}'.format('../../output_files/simu_slab.npz'))
+np.savez('../output_files/simu_const.npz', *simu_const)
+print('... saved simulation output as {}'.format('../../output_files/simu_const.npz'))
 
 print('... Done.')

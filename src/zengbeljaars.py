@@ -1,24 +1,26 @@
-"""
-Python implementation of the Zeng & Beljaars 2005 diurnal SST scheme.
-Includes a cool skin layer scheme based on Fairall et al. 1996.
-See documentation: https://github.com/reykboerner/diusst
+__author__ = "Reyk Boerner"
 
+'''
+Implementation of the Zeng & Beljaars 2005 model.
 Author: Reyk Börner (reyk.boerner@reading.ac.uk)
 Date: 01 March 2023
-
-References:
-[1] Zeng and Beljaars (2005), https://doi.org/10.1029/2005GL023030
-[2] Fairall et al. (1996), https://dx.doi.org/10.1029/95JC03190
-[3] COARE 3.6 algorithm, https://github.com/NOAA-PSL/COARE-algorithm/tree/master/Python/COARE3.6,
-    specifically 'coare36vn_zrf_et.py', release v1.1, lines 568-573
-"""
-
-__author__ = "Reyk Boerner"
+'''
 
 import numpy as np
 from tqdm import tqdm
 
 class ZengBeljaars:
+    """
+    Python implementation of the Zeng & Beljaars 2005 diurnal SST scheme.
+    Includes a cool skin layer scheme based on Fairall et al. 1996.
+    See documentation: https://github.com/reykboerner/diusst
+
+    References:
+    [1] Zeng and Beljaars (2005), https://doi.org/10.1029/2005GL023030
+    [2] Fairall et al. (1996), https://dx.doi.org/10.1029/95JC03190
+    [3] COARE 3.6 algorithm, https://github.com/NOAA-PSL/COARE-algorithm/tree/master/Python/COARE3.6,
+        specifically 'coare36vn_zrf_et.py', release v1.1, lines 568-573
+    """
 
     def __init__(self, takaya10=True, reflect=False,
         T_f = 300,                      # foundation temperature (K)

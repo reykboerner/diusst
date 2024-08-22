@@ -1,7 +1,7 @@
 __author__ = 'Reyk Boerner'
 
 '''
-Script to perform Bayesian inference for the diuSST model.
+Script to perform Bayesian inference for the Slab model.
 - Computes the posterior distribtion of parametes d, Q_sink, xi_1, xi_2
 - Uses the emcee algorithm for MCMC sampling
 - Specify run settings below!
@@ -13,7 +13,7 @@ Script to perform Bayesian inference for the diuSST model.
 
 # Output storage
 run_id = 'paper_bayesian_slab_ftemp-totalmean'
-output_path = '../../output_files/'
+output_path = '../output_files/'
 
 # Fit parameters
 param_names = ['d', 'Q_sink', 'xi_1', 'xi_2']
@@ -42,6 +42,8 @@ data_path = '../input_data/moce5/'
 data_filename = 'moce5_dataset.cdf'
 data_interval1 = [96,413]
 data_interval2 = [1290,1585]
+
+# Indices of outlier data points to be ignored
 removeidx2 = [69,74,81,82,99,100,171,172,176]
 
 # Other settings
