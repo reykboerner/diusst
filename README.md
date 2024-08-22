@@ -23,8 +23,8 @@ Learn more about the *DiuSST* model in [this 15-minute video](https://youtu.be/K
 ## Observational dataset
 The MOCE-5 cruise observations used to calibrate the DiuSST model as described in [the paper](https://arxiv.org/abs/2205.07933) is stored in `input_data/moce5/moce5_dataset.cdf` as a netCDF file. The raw data is also contained in the folder `input_data/moce5/`.
 
-## Reproducability
-Results in the DiuSST model description [paper](https://arxiv.org/abs/2205.07933) were produced with version `v1.1` of this repository. The script `scripts/generate_plotdata.py` runs the model simulations and saves the model output, which is found in `output_files` as `.npz` files. Code to reproduce figures based on these simulation data is located in `scripts/figs`. Model calibration via Bayesian inference was performed using the scripts `paper_bayesian_diusst.py` (DiuSST model) and `paper_bayesian_slab.py` (Slab model). The resulting posterior distributions are saved in `output_files` as `posterior_diusst.h5` and `posterior_slab.h5`, respectively.
+## Reproducibility
+Results in the DiuSST model description [paper](https://arxiv.org/abs/2205.07933) were produced with version `v1.2` of this repository. The script `scripts/generate_plotdata.py` runs the model simulations and saves the model output, which is found in `output_files` as `.npz` files. Code to reproduce figures based on these simulation data is located in `scripts/figs`. Model calibration via Bayesian inference was performed using the scripts `paper_bayesian_diusst.py` (DiuSST model) and `paper_bayesian_slab.py` (Slab model). The resulting posterior distributions are saved in `output_files` as `posterior_diusst.h5` and `posterior_slab.h5`, respectively.
 
 ## Acknowledgements
 This work has been conducted within the Atmospheric Complexity Group at the Niels Bohr Institute, University of Copenhagen, Denmark.
