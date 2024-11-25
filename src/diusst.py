@@ -46,7 +46,7 @@ class Diusst:
 
     """
 
-    def __init__(self, diffu_profile='LIN', reflect=True,
+    def __init__(self, diffu_profile='LIN', reflect=True, refract=True,
         T_f = 300,
         kappa = 1.42e-4,
         mu = 2.93e-3,
@@ -78,13 +78,23 @@ class Diusst:
         ----------
 
         CFL: float
-            Target CFL number when determining the variable time step during data interpolation.
+            Target CFL number when determining the variable time step during data
+            interpolation.
 
         wind_max: float
             Cutoff maximum wind speed in the diffusion term, to limit computational cost.
 
         wind_exp: int
-            Exponent in the relation between turbulent diffusivity and wind speed. Standard value is 2.
+            Exponent in the relation between turbulent diffusivity and wind speed. Standard
+            value is 2.
+
+        reflect: bool
+            Whether to subtract from incident solar radiation the fraction reflected at the
+            surface.
+
+        refract: bool
+            Whether to include the effect of refraction of incident solar radiation at the
+            surface.
 
         Parameters
         ----------
@@ -100,7 +110,8 @@ class Diusst:
         ----------
         z_f:        (float) Foundation depth (m).
         dz0:        (float) Vertical grid resolution at sea surface (m).
-        ngrid:      (int)   Number of vertical grid points. If None, then uniform grid with spacing dz0 is used.
+        ngrid:      (int)   Number of vertical grid points. If None, then uniform grid with
+                    spacing dz0 is used.
 
         Physical constants
         ----------
@@ -120,6 +131,7 @@ class Diusst:
 
         self.diffu_profile = diffu_profile
         self.reflect = reflect
+        self.refract = refract
         self.T_f = T_f
         self.kappa = kappa
         self.mu = mu
@@ -237,7 +249,8 @@ class Diusst:
         # Shortwave heat flux penetrating the sea surface
         R_sw = np.zeros((N_t,N_z))
         for i in range(N_z):
-            R_sw[:,i] = Diusst._transmitted(self, swrad_data, solar_angle) * np.exp(self.alpha / np.cos( Diusst._refract_angle(self, solar_angle) ) * z[i])
+            R_sw[:,i] = self._transmitted(swrad_data, solar_angle) * np.exp(
+                self.alpha / np.cos( self._refract_angle(solar_angle) ) * z[i])
 
         # Wind dependence of diffusion term
         wind_factor = np.minimum(wind_data, self.wind_max) ** self.wind_exp
@@ -252,13 +265,17 @@ class Diusst:
 
         elif self.diffu_profile == 'LIN':
             for i in range(N_z):
-                diffu[:,i] = self.k_mol + wind_factor * self.kappa * (1 + self.sigma * (np.abs(z[i]/self.z_f) - 1))
+                diffu[:,i] = self.k_mol + wind_factor * self.kappa * (
+                    1 + self.sigma * (np.abs(z[i]/self.z_f) - 1))
                 ddiffu[:,i] = - wind_factor * self.kappa * self.sigma / self.z_f
 
         elif self.diffu_profile == 'EXP':
             for i in range(N_z):
-                diffu[:,i] = self.k_mol + wind_factor * self.kappa * (1 - self.sigma * np.exp(z[i]/self.lambd))/(1 - self.sigma*np.exp(-self.z_f/self.lambd))
-                ddiffu[:,i] = - wind_factor * self.kappa / self.lambd * self.sigma * np.exp(z[i]/self.lambd) /(1 - self.sigma*np.exp(-self.z_f/self.lambd))
+                diffu[:,i] = self.k_mol + wind_factor * self.kappa * (
+                    1 - self.sigma * np.exp(z[i]/self.lambd))/(
+                    1 - self.sigma*np.exp(-self.z_f/self.lambd))
+                ddiffu[:,i] = - wind_factor * self.kappa / self.lambd * self.sigma * np.exp(
+                    z[i]/self.lambd) /(1 - self.sigma*np.exp(-self.z_f/self.lambd))
 
         ### Time integration ###
         if progress:
@@ -275,21 +292,27 @@ class Diusst:
             # Diffusion term (state-dependent diffusivity profiles)
             if self.diffu_profile == 'S-LIN':
                 S = min( max((T[n-1,1]-T[n-1,zidx_ref]), 0) , 1)
-                diffu[n-1] = self.k_mol + wind_factor[n-1] * self.kappa * (1 + S*self.sigma*(np.abs(z[i]/self.z_f)-1))
+                diffu[n-1] = self.k_mol + wind_factor[n-1] * self.kappa * (
+                    1 + S*self.sigma*(np.abs(z[i]/self.z_f)-1))
                 ddiffu[n-1] = - wind_factor[n-1] * self.kappa * S * self.sigma / self.z_f
 
             elif self.diffu_profile == 'S-EXP':
                 S = min( max((T[n-1,1]-T[n-1,zidx_ref]), 0) , 1)
-                diffu[n-1] = self.k_mol + wind_factor[n-1] * self.kappa * (1-S*self.sigma*np.exp(z/self.lambd))/(1-S*self.sigma*np.exp(-self.z_f/self.lambd))
-                ddiffu[n-1] = - wind_factor[n-1] * self.kappa * S*self.sigma/self.lambd * np.exp(z/self.lambd) /(1-S*self.sigma*np.exp(-self.z_f/self.lambd))
+                diffu[n-1] = self.k_mol + wind_factor[n-1] * self.kappa * (
+                    1-S*self.sigma*np.exp(z/self.lambd))/(
+                    1-S*self.sigma*np.exp(-self.z_f/self.lambd))
+                ddiffu[n-1] = - wind_factor[n-1] * self.kappa * S*self.sigma/self.lambd * np.exp(
+                    z/self.lambd) /(1-S*self.sigma*np.exp(-self.z_f/self.lambd))
 
             # Compute surface fluxes
             Rlw = self.sb_const * (airtemp_data[n-1]**4 - T[n-1,1]**4)
-            Qs  = self.rho_a * self.cp_a * self.C_s * wind_data[n-1] * (airtemp_data[n-1] - T[n-1,1])
-            Ql  = self.rho_a * self.L_evap * self.C_l * wind_data[n-1] * (humid_data[n-1] - Diusst.get_sat_humid(self, T[n-1,1]))
+            Qs  = self.rho_a * self.cp_a * self.C_s * wind_data[n-1] * (
+                airtemp_data[n-1] - T[n-1,1])
+            Ql  = self.rho_a * self.L_evap * self.C_l * wind_data[n-1] * (
+                humid_data[n-1] - Diusst.get_sat_humid(self, T[n-1,1]))
 
             # Total heat flux
-            Q = R_sw[n-1]
+            Q = R_sw[n-1].copy()
             Q[1] += Rlw + Qs + Ql
 
             # Euler step
@@ -474,7 +497,10 @@ class Diusst:
         theta = angle % (2*np.pi)
         theta = np.where((theta > (np.pi/2)) & (theta < (3*np.pi/2)), np.pi/2, theta)
 
-        return np.abs(np.arcsin(self.n_a / self.n_w * np.sin(theta)))
+        if self.refract:
+            return np.abs(np.arcsin(self.n_a / self.n_w * np.sin(theta)))
+        else:
+            return np.abs(theta)
 
     def _transmitted(self, irradiance, angle):
         """
