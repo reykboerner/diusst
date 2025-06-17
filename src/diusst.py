@@ -375,7 +375,7 @@ class Diusst:
         """
 
         # Generate stretched mesh
-        z = Diusst.get_mesh(self)[0]
+        z = Diusst.get_mesh()[0]
         dz = (z[1:]-z[:-1])[:-1]
 
         # Extract data
