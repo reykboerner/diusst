@@ -6,8 +6,7 @@ module grid
 
     ! horizontal domain
     integer, parameter :: nx = 10, ny = 10
-    real :: x(nx), y(ny)
-
+    
     ! vertical domain
     integer, parameter :: nz = 42
     real :: z(nz)           ! vertical coordinate
