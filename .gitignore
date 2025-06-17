@@ -17,3 +17,4 @@
 /output_files/**/old/**
 /vor_hackathon/
 /before_arxiv/
+*.mod
